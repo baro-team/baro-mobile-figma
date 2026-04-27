@@ -20,7 +20,7 @@ export function BookingPanel({
       <div className="flex flex-col gap-3 mb-5">
         <div className="relative">
           <div className="absolute top-1/2 left-4 -translate-y-1/2 text-cyan-400">
-            <Circle className="w-2 h-2 text-cyan" />
+            <Circle className="w-2 h-2" />
           </div>
           <input
             type="text"
@@ -33,7 +33,7 @@ export function BookingPanel({
 
         <div className="relative">
           <div className="absolute top-1/2 -translate-y-1/2 text-cyan-400">
-            <Dot className="w-10 h-10 text-cyan" />
+            <Dot className="w-10 h-10" />
           </div>
           <input
             type="text"

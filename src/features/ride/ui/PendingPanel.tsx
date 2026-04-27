@@ -24,7 +24,7 @@ export function PendingPanel({
         />
       </div>
 
-      <div className="top-3 flex flex-col items-center gap-3 mb-4 p-3 text-center">
+      <div className="flex flex-col items-center gap-3 mb-4 p-3 text-center">
         <div className="p-2.5 bg-cyan-400 rounded-full animate-pulse shadow-sm">
           <Car className="w-5 h-5 text-white" />
         </div>
