@@ -9,7 +9,7 @@ type MapStageProps = {
 
 export function MapStage({ origin, destination, rideState }: MapStageProps) {
   return (
-    <div className="relative w-full h-full bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 overflow-hidden">
+    <div className="relative w-full flex-1 min-h-0 bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 overflow-hidden">
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-[20%] left-[30%] w-32 h-32 bg-cyan-200 rounded-full blur-3xl"></div>
         <div className="absolute bottom-[30%] right-[20%] w-40 h-40 bg-cyan-400 rounded-full blur-3xl"></div>
@@ -72,7 +72,7 @@ export function MapStage({ origin, destination, rideState }: MapStageProps) {
       )}
 
       {rideState !== "booking" && (
-        <div className="absolute bottom-4 left-4 px-4 py-2 bg-white/90 backdrop-blur-md rounded-xl border border-gray-200 shadow-sm">
+        <div className="absolute left-4 px-4 py-2 bg-white/90 backdrop-blur-md rounded-xl border border-gray-200 shadow-sm bottom-[calc(1rem+var(--safe-area-bottom))]">
           <p className="text-xs text-gray-700 font-medium">13km</p>
         </div>
       )}
