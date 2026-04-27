@@ -18,10 +18,7 @@ export function BookingPanel({
 }: BookingPanelProps) {
   return (
     <>
-      <RideSheetSection
-        title="이동 경로"
-        subtitle="출발지와 목적지를 입력하면 배차를 요청할 수 있습니다."
-      >
+      <RideSheetSection>
         <div className="flex flex-col gap-3">
           <div className="relative">
             <div className="absolute top-1/2 left-4 -translate-y-1/2 text-cyan-400">
@@ -32,7 +29,7 @@ export function BookingPanel({
               placeholder="출발지"
               value={origin}
               onChange={(e) => onOriginChange(e.target.value)}
-              className="w-full border border-transparent pl-10 pr-3 py-3.5 bg-white rounded-2xl text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-cyan-400 focus:bg-white focus:shadow-[0_0_0_3px_rgba(34,211,238,0.18)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="w-full border border-transparent pl-10 pr-3 py-3.5 bg-gray-50 rounded-md text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-cyan-400 focus:bg-white focus:shadow-[0_0_0_2px_rgba(34,211,238,0.18)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             />
           </div>
 
@@ -45,7 +42,7 @@ export function BookingPanel({
               placeholder="목적지"
               value={destination}
               onChange={(e) => onDestinationChange(e.target.value)}
-              className="w-full border border-transparent pl-10 pr-3 py-3.5 bg-white rounded-2xl text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-cyan-400 focus:bg-white focus:shadow-[0_0_0_3px_rgba(34,211,238,0.18)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="w-full border border-transparent pl-10 pr-3 py-3.5 bg-gray-50 rounded-md text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-cyan-400 focus:bg-white focus:shadow-[0_0_0_2px_rgba(34,211,238,0.18)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             />
           </div>
         </div>
@@ -54,7 +51,7 @@ export function BookingPanel({
       <button
         onClick={onRequestRide}
         disabled={!origin || !destination}
-        className="mt-5 w-full py-3.5 bg-cyan-400 hover:bg-cyan-500 disabled:bg-gray-200 disabled:text-gray-400 text-white font-semibold rounded-2xl active:scale-[0.99] transition-all shadow-sm disabled:shadow-none"
+        className="mt-5 w-full py-3.5 bg-cyan-400 hover:bg-cyan-500 disabled:bg-gray-200 disabled:text-gray-400 text-white font-semibold rounded-md active:scale-[0.99] transition-all shadow-sm disabled:shadow-none"
       >
         배차 요청
       </button>

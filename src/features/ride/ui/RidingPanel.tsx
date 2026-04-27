@@ -16,10 +16,7 @@ export function RidingPanel({
 }: RidingPanelProps) {
   return (
     <div className="flex flex-col">
-      <RideSheetSection
-        title="운행 중"
-        subtitle="목적지까지 이동하고 있습니다."
-      >
+      <RideSheetSection>
         <RideVehicleCard
           label="차량 A-7492"
           badgeLabel="운행중"

@@ -18,10 +18,7 @@ export function PendingPanel({
 }: PendingPanelProps) {
   return (
     <>
-      <RideSheetSection
-        title="배차 진행 중"
-        subtitle="주변 차량을 탐색하고 있습니다."
-      >
+      <RideSheetSection>
         <RideRouteSummary
           origin={origin}
           destination={destination}
@@ -58,7 +55,7 @@ export function PendingPanel({
       <RideSheetActions>
         <button
           onClick={onCancelRide}
-          className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold py-4 rounded-2xl transition-all text-lg"
+          className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold py-4 rounded-md transition-all text-lg"
         >
           취소
         </button>
