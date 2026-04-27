@@ -34,9 +34,6 @@ export function RideBottomSheet({
   const arrivalTime = `13:${String(eta).padStart(2, "0")}`;
   const formattedEstimatedCost =
     estimatedCost !== null ? `₩${estimatedCost.toLocaleString("ko-KR")}` : "-";
-  const sheetMaxHeight = isKeyboardOpen
-    ? "min(32rem, calc(var(--app-viewport-height, 100dvh) * 0.6))"
-    : "min(30rem, 48vh)";
   const contentPaddingBottom = isKeyboardOpen
     ? "1.5rem"
     : "calc(1.5rem + var(--safe-area-bottom))";
@@ -86,14 +83,11 @@ export function RideBottomSheet({
   };
 
   return (
-    <div
-      className="w-full max-w-md mx-auto relative flex shrink-0 flex-col bg-white shadow-2xl rounded-t-3xl"
-      style={{ maxHeight: sheetMaxHeight }}
-    >
+    <div className="w-full max-w-md mx-auto relative flex shrink-0 flex-col bg-white shadow-2xl rounded-t-3xl">
       <div className="w-12 h-1 bg-gray-300 mx-auto mt-3 mb-4 shrink-0"></div>
 
       <div
-        className="overflow-y-auto overscroll-contain px-5 pt-2"
+        className="px-5 pt-2"
         style={{ paddingBottom: contentPaddingBottom }}
       >
         {renderPanel()}

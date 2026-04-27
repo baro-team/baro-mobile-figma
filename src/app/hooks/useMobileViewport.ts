@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 type MobileViewportState = {
   isKeyboardOpen: boolean;
-  viewportHeight: number | null;
+  keyboardInset: number;
 };
 
 const KEYBOARD_OPEN_THRESHOLD = 120;
@@ -10,7 +10,7 @@ const KEYBOARD_OPEN_THRESHOLD = 120;
 export function useMobileViewport(): MobileViewportState {
   const [state, setState] = useState<MobileViewportState>({
     isKeyboardOpen: false,
-    viewportHeight: null,
+    keyboardInset: 0,
   });
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export function useMobileViewport(): MobileViewportState {
         );
         setState({
           isKeyboardOpen: false,
-          viewportHeight: window.innerHeight,
+          keyboardInset: 0,
         });
         return;
       }
@@ -46,7 +46,7 @@ export function useMobileViewport(): MobileViewportState {
 
       setState({
         isKeyboardOpen: keyboardInset > KEYBOARD_OPEN_THRESHOLD,
-        viewportHeight,
+        keyboardInset,
       });
     };
 
