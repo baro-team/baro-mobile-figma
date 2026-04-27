@@ -90,10 +90,10 @@ export function RideBottomSheet({
       className="w-full max-w-md mx-auto relative flex shrink-0 flex-col bg-white shadow-2xl rounded-t-3xl"
       style={{ maxHeight: sheetMaxHeight }}
     >
-      <div className="w-12 h-1 bg-gray-300 mx-auto mt-3 mb-4"></div>
+      <div className="w-12 h-1 bg-gray-300 mx-auto mt-3 mb-4 shrink-0"></div>
 
       <div
-        className="overflow-y-auto overscroll-contain px-5"
+        className="overflow-y-auto overscroll-contain px-5 pt-2"
         style={{ paddingBottom: contentPaddingBottom }}
       >
         {renderPanel()}
