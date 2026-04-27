@@ -3,6 +3,14 @@
 BARO 승차 플로우를 모바일 화면 기준으로 구현한 프런트엔드 프로토타입입니다.  
 Figma 시안을 바탕으로 배차 요청부터 차량 도착, 탑승 진행, 운행 완료까지의 흐름을 한 화면 안에서 확인할 수 있도록 구성했습니다.
 
+![React](https://img.shields.io/badge/React-18.3.1-61DAFB?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-6.3.5-646CFF?logo=vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4.1.12-06B6D4?logo=tailwindcss&logoColor=white)
+![Motion](https://img.shields.io/badge/Motion-12.23.24-0F172A?logo=framer&logoColor=white)
+![Lucide](https://img.shields.io/badge/Lucide-Icons-F56565?logo=lucide&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-Preview-000000?logo=vercel&logoColor=white)
+
 원본 디자인:
 [BARO-MobileUI Figma](https://www.figma.com/design/Q49GNx8cbuwPZkYKa5LVvJ/BARO-MobileUI)
 

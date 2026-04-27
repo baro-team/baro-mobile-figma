@@ -1,5 +1,6 @@
 import { RideFareSummary } from "./RideFareSummary";
 import { RideRouteSummary } from "./RideRouteSummary";
+import { RideSheetSection } from "./RideSheetSection";
 import { RideVehicleCard } from "./RideVehicleCard";
 
 type RidingPanelProps = {
@@ -15,21 +16,25 @@ export function RidingPanel({
 }: RidingPanelProps) {
   return (
     <div className="flex flex-col">
-      <div className="p-5 rounded-md">
+      <RideSheetSection>
         <RideVehicleCard
           label="차량 A-7492"
           badgeLabel="운행중"
           rounded="md"
         />
 
-        <RideRouteSummary
-          origin={origin}
-          destination={destination}
-          compact
-        />
-      </div>
+        <div className="mt-4">
+          <RideRouteSummary
+            origin={origin}
+            destination={destination}
+            compact
+          />
+        </div>
 
-      <RideFareSummary formattedEstimatedCost={formattedEstimatedCost} />
+        <div className="mt-4">
+          <RideFareSummary formattedEstimatedCost={formattedEstimatedCost} />
+        </div>
+      </RideSheetSection>
     </div>
   );
 }
