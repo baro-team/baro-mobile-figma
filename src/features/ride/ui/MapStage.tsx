@@ -28,7 +28,7 @@ export function MapStage({ origin, destination, rideState }: MapStageProps) {
             <MapPin className="w-6 h-6 text-white" />
           </div>
           <div className="px-3 py-1 bg-white/90 backdrop-blur-sm rounded-lg border border-gray-200 shadow-sm">
-            <p className="text-xs text-gray-700 font-medium">출발</p>
+            <p className="type-caption text-gray-700">출발</p>
           </div>
         </div>
       )}
@@ -39,7 +39,7 @@ export function MapStage({ origin, destination, rideState }: MapStageProps) {
             <MapPin className="w-6 h-6 text-white" />
           </div>
           <div className="px-3 py-1 bg-white/90 backdrop-blur-sm rounded-lg border border-gray-200 shadow-sm">
-            <p className="text-xs text-gray-700 font-medium">도착</p>
+            <p className="type-caption text-gray-700">도착</p>
           </div>
         </div>
       )}
@@ -73,7 +73,7 @@ export function MapStage({ origin, destination, rideState }: MapStageProps) {
 
       {rideState !== "booking" && (
         <div className="absolute left-4 px-4 py-2 bg-white/90 backdrop-blur-md rounded-xl border border-gray-200 shadow-sm bottom-[calc(1rem+var(--safe-area-bottom))]">
-          <p className="text-xs text-gray-700 font-medium">13km</p>
+          <p className="type-caption text-gray-700">13km</p>
         </div>
       )}
     </div>

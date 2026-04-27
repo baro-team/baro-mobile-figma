@@ -19,11 +19,11 @@ export function RideRouteSummary({
     <div className={containerClassName}>
       <div className="flex items-center">
         <Dot className="w-10 h-10 text-black" />
-        <p className="text-gray-700 text-base">{origin}</p>
+        <p className="type-body text-gray-700">{origin}</p>
       </div>
       <div className="flex items-center">
         <Dot className="w-10 h-10 text-cyan-400" />
-        <p className="text-gray-700 text-base">{destination}</p>
+        <p className="type-body text-gray-700">{destination}</p>
       </div>
     </div>
   );

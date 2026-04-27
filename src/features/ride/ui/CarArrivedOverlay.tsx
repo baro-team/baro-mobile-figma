@@ -29,7 +29,7 @@ export function CarArrivedOverlay({ visible, onOpenDoor }: CarArrivedOverlayProp
       >
         <div className="relative p-5 pb-8">
           <div className="w-12 h-1 bg-gray-300 rounded-md mx-auto mb-5"></div>
-          <h3 className="text-lg text-center text-gray-900 font-semibold mb-3">
+          <h3 className="type-title text-center text-gray-900 mb-3">
             차량이 도착했습니다!
           </h3>
           <div className="relative mb-5">
@@ -151,12 +151,12 @@ export function CarArrivedOverlay({ visible, onOpenDoor }: CarArrivedOverlayProp
 
           <div className="space-y-3 p-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">차량ID</span>
-              <span className="text-sm text-gray-900 font-medium font-semibold">WX-1212</span>
+              <span className="type-label text-gray-600">차량ID</span>
+              <span className="type-label-strong text-gray-900">WX-1212</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">차량번호</span>
-              <span className="text-sm text-gray-900 font-medium font-semibold">123가 1234</span>
+              <span className="type-label text-gray-600">차량번호</span>
+              <span className="type-label-strong text-gray-900">123가 1234</span>
             </div>
           </div>
 
@@ -168,7 +168,7 @@ export function CarArrivedOverlay({ visible, onOpenDoor }: CarArrivedOverlayProp
           >
             <button
               onClick={onOpenDoor}
-              className="w-full py-3.5 bg-cyan-400 hover:bg-cyan-500 text-white font-semibold rounded-md active:scale-95 transition-all shadow-sm"
+              className="type-button w-full py-3.5 bg-cyan-400 hover:bg-cyan-500 text-white rounded-md active:scale-95 transition-all shadow-sm"
             >
               잠금 해제
             </button>

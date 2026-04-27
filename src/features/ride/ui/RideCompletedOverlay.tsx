@@ -54,7 +54,7 @@ export function RideCompletedOverlay({
             >
               <Car className="w-6 h-6 text-white" />
             </motion.div>
-            <h3 className="text-lg text-gray-900 font-semibold mb-1">
+            <h3 className="type-title text-gray-900 mb-1">
               차량이 목적지에 도착했습니다!
             </h3>
           </div>
@@ -67,7 +67,7 @@ export function RideCompletedOverlay({
           >
             <button
               onClick={onConfirm}
-              className="w-full py-3.5 bg-cyan-400 hover:bg-cyan-500 text-white font-semibold rounded-md active:scale-95 transition-all shadow-sm"
+              className="type-button w-full py-3.5 bg-cyan-400 hover:bg-cyan-500 text-white rounded-md active:scale-95 transition-all shadow-sm"
             >
               확인
             </button>

@@ -22,8 +22,8 @@ export function MatchedPanel({
   return (
     <div className="flex flex-col">
       <div className="flex flex-row items-center gap-1.5 mb-4">
-        <p className="text-gray-900 font-bold text-xl">{arrivalTime}</p>
-        <p className="text-gray-500"> 도착 예정 </p>
+        <p className="type-display text-gray-900">{arrivalTime}</p>
+        <p className="type-label text-gray-500"> 도착 예정 </p>
       </div>
 
       <RideSheetSection>
@@ -40,7 +40,7 @@ export function MatchedPanel({
       <RideSheetActions>
         <button
           onClick={onCancelRide}
-          className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold py-4 rounded-md transition-all text-lg"
+          className="type-title flex-1 bg-gray-100 hover:bg-gray-200 text-gray-900 py-4 rounded-md transition-all"
         >
           배차 취소
         </button>
