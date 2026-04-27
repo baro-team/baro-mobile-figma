@@ -1,3 +1,4 @@
+import { FormEvent } from "react";
 import { Circle, Dot } from "lucide-react";
 import { RideSheetSection } from "./RideSheetSection";
 
@@ -16,8 +17,20 @@ export function BookingPanel({
   onDestinationChange,
   onRequestRide,
 }: BookingPanelProps) {
+  const canRequestRide = Boolean(origin && destination);
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!canRequestRide) {
+      return;
+    }
+
+    onRequestRide();
+  };
+
   return (
-    <>
+    <form onSubmit={handleSubmit}>
       <RideSheetSection>
         <div className="flex flex-col gap-3">
           <div className="relative">
@@ -49,12 +62,12 @@ export function BookingPanel({
       </RideSheetSection>
 
       <button
-        onClick={onRequestRide}
-        disabled={!origin || !destination}
+        type="submit"
+        disabled={!canRequestRide}
         className="mt-5 w-full py-3.5 bg-cyan-400 hover:bg-cyan-500 disabled:bg-gray-200 disabled:text-gray-400 text-white font-semibold rounded-md active:scale-[0.99] transition-all shadow-sm disabled:shadow-none"
       >
         배차 요청
       </button>
-    </>
+    </form>
   );
 }
