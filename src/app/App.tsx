@@ -15,7 +15,6 @@ export default function App() {
     eta,
     searchRadius,
     showCarOverlay,
-    setShowCarOverlay,
     requestRide,
     openDoor,
     resetToBooking,
@@ -45,7 +44,6 @@ export default function App() {
 
       <CarArrivedOverlay
         visible={showCarOverlay}
-        onDismiss={() => setShowCarOverlay(false)}
         onOpenDoor={openDoor}
       />
 

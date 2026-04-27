@@ -26,6 +26,10 @@ export function RideBottomSheet({
   onRequestRide,
   onCancelRide,
 }: RideBottomSheetProps) {
+  const arrivalTime = `13:${String(eta).padStart(2, "0")}`;
+  const formattedEstimatedCost =
+    estimatedCost !== null ? `₩${estimatedCost.toLocaleString("ko-KR")}` : "-";
+
   return (
     <div className="w-full h-max flex flex-col bg-white max-w-md mx-auto relative shadow-2xl">
       <div className="w-12 h-1 bg-gray-300 mx-auto mt-3 mb-4"></div>
@@ -121,7 +125,7 @@ export function RideBottomSheet({
         {rideState === "matched" && (
           <div className="flex flex-col ">
             <div className="flex flex-row items-center gap-1.5 mb-4">
-              <p className="text-gray-900 font-bold text-xl">13:0{eta}</p>
+              <p className="text-gray-900 font-bold text-xl">{arrivalTime}</p>
               <p className="text-gray-500"> 도착 예정 </p>
             </div>
             <div className="p-5 rounded-2xl border border-gray-200">
@@ -146,9 +150,7 @@ export function RideBottomSheet({
               </div>
               <div className="relative top-1 flex flex-1 flex-row justify-between items-center bg-white px-4 py-3 border-t border-gray-200">
                 <p className="text-gray-500">요금</p>
-                <p className="text-cyan-400 font-bold text-xl">
-                  ₩{estimatedCost?.toLocaleString("ko-KR")}
-                </p>
+                <p className="text-cyan-400 font-bold text-xl">{formattedEstimatedCost}</p>
               </div>
             </div>
 
@@ -189,9 +191,7 @@ export function RideBottomSheet({
 
             <div className="relative top-1 flex flex-1 flex-row justify-between items-center bg-white px-4 py-3 border-t border-gray-200">
               <p className="text-gray-500">요금</p>
-              <p className="text-cyan-400 font-bold text-xl">
-                ₩{estimatedCost?.toLocaleString("ko-KR")}
-              </p>
+              <p className="text-cyan-400 font-bold text-xl">{formattedEstimatedCost}</p>
             </div>
           </div>
         )}

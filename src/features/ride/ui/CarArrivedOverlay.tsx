@@ -2,15 +2,10 @@ import { motion } from "motion/react";
 
 type CarArrivedOverlayProps = {
   visible: boolean;
-  onDismiss: () => void;
   onOpenDoor: () => void;
 };
 
-export function CarArrivedOverlay({
-  visible,
-  onDismiss,
-  onOpenDoor,
-}: CarArrivedOverlayProps) {
+export function CarArrivedOverlay({ visible, onOpenDoor }: CarArrivedOverlayProps) {
   if (!visible) {
     return null;
   }
@@ -21,7 +16,6 @@ export function CarArrivedOverlay({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="absolute inset-0 bg-black/20 backdrop-blur-sm z-40"
-        onClick={onDismiss}
       />
       <motion.div
         initial={{ y: "100%" }}

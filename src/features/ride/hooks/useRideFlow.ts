@@ -85,7 +85,6 @@ export function useRideFlow() {
     eta,
     searchRadius,
     showCarOverlay,
-    setShowCarOverlay,
     requestRide,
     openDoor,
     resetToBooking,
