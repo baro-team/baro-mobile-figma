@@ -47,13 +47,21 @@ function getProjectedRoutePoints(routePath: RoutePoint[]) {
 
 function createMarkerContent(label: string, variant: "origin" | "destination") {
   const badgeColor = variant === "origin" ? "#030213" : "#22d3ee";
+  const pinIcon = `
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M20 10C20 16 12 22 12 22C12 22 4 16 4 10C4 5.58172 7.58172 2 12 2C16.4183 2 20 5.58172 20 10Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="12" cy="10" r="3" stroke="white" stroke-width="2"/>
+    </svg>
+  `;
 
   return `
     <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
-      <div style="width:48px;height:48px;border-radius:9999px;background:${badgeColor};box-shadow:0 1px 2px rgb(15 23 42 / 0.08);display:flex;align-items:center;justify-content:center;color:#ffffff;font-size:18px;font-weight:700;">
-        ${variant === "origin" ? "출" : "도"}
+      <div style="width:48px;height:48px;border-radius:9999px;background:${badgeColor};box-shadow:0 1px 2px rgb(15 23 42 / 0.08);display:flex;align-items:center;justify-content:center;">
+        <div style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;">
+          ${pinIcon}
+        </div>
       </div>
-      <div style="padding:4px 12px;border-radius:12px;border:1px solid #e5e7eb;background:rgb(255 255 255 / 0.92);box-shadow:0 1px 2px rgb(15 23 42 / 0.08);backdrop-filter:blur(8px);font-size:12px;line-height:16px;color:#6b7280;white-space:nowrap;">
+      <div style="padding:4px 12px;border-radius:8px;border:1px solid #e5e7eb;background:rgb(255 255 255 / 0.92);box-shadow:0 1px 2px rgb(15 23 42 / 0.08);backdrop-filter:blur(8px);font-size:12px;line-height:16px;font-weight:500;color:#6b7280;white-space:nowrap;">
         ${label}
       </div>
     </div>
@@ -83,7 +91,7 @@ function FallbackMapStage({
     .join(" ");
 
   return (
-    <div className="relative w-full flex-1 min-h-0 bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 overflow-hidden">
+    <div className="relative h-full w-full overflow-hidden bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100">
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-[20%] left-[30%] w-32 h-32 bg-cyan-200 rounded-full blur-3xl"></div>
         <div className="absolute bottom-[30%] right-[20%] w-40 h-40 bg-cyan-400 rounded-full blur-3xl"></div>
@@ -165,9 +173,21 @@ function FallbackMarker({
       }}
     >
       <div className={variant === "origin" ? "ds-icon-badge-neutral p-3" : "ds-icon-badge p-3"}>
-        <div className="flex h-6 w-6 items-center justify-center text-sm font-bold text-white">
-          {variant === "origin" ? "출" : "도"}
-        </div>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+          className="h-6 w-6"
+        >
+          <path
+            d="M20 10C20 16 12 22 12 22C12 22 4 16 4 10C4 5.58172 7.58172 2 12 2C16.4183 2 20 5.58172 20 10Z"
+            stroke="white"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <circle cx="12" cy="10" r="3" stroke="white" strokeWidth="2" />
+        </svg>
       </div>
       <div className="ds-inline-card px-3 py-1 rounded-lg backdrop-blur-sm">
         <p className="type-caption ds-text-secondary">{label}</p>
@@ -245,6 +265,28 @@ export function MapStage(props: MapStageProps) {
     const overlays: Array<{ setMap: (map: unknown | null) => void }> = [];
     const bounds = new kakao.maps.LatLngBounds();
 
+    routeLatLngs.forEach((latLng) => bounds.extend(latLng));
+
+    if (routeLatLngs.length > 1) {
+      const polylineStroke = new kakao.maps.Polyline({
+        map,
+        path: routeLatLngs,
+        strokeWeight: 9,
+        strokeColor: "rgba(3, 2, 19, 0.18)",
+        strokeOpacity: 1,
+        strokeStyle: "solid",
+      });
+      const polyline = new kakao.maps.Polyline({
+        map,
+        path: routeLatLngs,
+        strokeWeight: 5,
+        strokeColor: "#22d3ee",
+        strokeOpacity: 0.92,
+        strokeStyle: "solid",
+      });
+      overlays.push(polylineStroke, polyline);
+    }
+
     if (originLatLng) {
       bounds.extend(originLatLng);
       const originOverlay = new kakao.maps.CustomOverlay({
@@ -267,7 +309,7 @@ export function MapStage(props: MapStageProps) {
       overlays.push(destinationOverlay);
     }
 
-    if (markerLatLngs.length > 0) {
+    if (markerLatLngs.length > 0 || routeLatLngs.length > 1) {
       map.setBounds(bounds, 40, 40, 40, 40);
     }
 
@@ -287,7 +329,7 @@ export function MapStage(props: MapStageProps) {
   }
 
   return (
-    <div className="relative w-full flex-1 min-h-0 overflow-hidden bg-[#eef3f8]">
+    <div className="relative h-full w-full overflow-hidden bg-[#eef3f8]">
       <div ref={mapContainerRef} className="absolute inset-0" />
 
       {(rideState === "matched" || rideState === "riding") && (

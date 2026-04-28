@@ -1,5 +1,5 @@
 import { FormEvent } from "react";
-import { Circle, Dot } from "lucide-react";
+import { Dot } from "lucide-react";
 import { PlaceSearchResult, PreDispatchPreview, RideLocation } from "../model/ride-types";
 import { RideRouteSummary } from "./RideRouteSummary";
 import { RideSheetSection } from "./RideSheetSection";
@@ -147,7 +147,7 @@ export function BookingPanel({
           <div>
             <div className="relative">
               <div className="ds-text-primary absolute top-1/2 left-4 -translate-y-1/2">
-                <Circle className="w-2 h-2" />
+                <div className="h-2.5 w-2.5 rounded-full bg-[currentColor]" />
               </div>
               <input
                 type="text"
