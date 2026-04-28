@@ -1,4 +1,5 @@
 import { BookingPanel } from "./BookingPanel";
+import { PreDispatchPreview } from "../model/ride-types";
 import { MatchedPanel } from "./MatchedPanel";
 import { PendingPanel } from "./PendingPanel";
 import { RideState } from "../model/ride-machine";
@@ -8,6 +9,9 @@ type RideBottomSheetProps = {
   rideState: RideState;
   origin: string;
   destination: string;
+  preDispatchPreview: PreDispatchPreview | null;
+  isPreDispatchLoading: boolean;
+  preDispatchError: string | null;
   eta: number;
   searchRadius: number;
   estimatedCost: number | null;
@@ -22,6 +26,9 @@ export function RideBottomSheet({
   rideState,
   origin,
   destination,
+  preDispatchPreview,
+  isPreDispatchLoading,
+  preDispatchError,
   eta,
   searchRadius,
   estimatedCost,
@@ -45,6 +52,9 @@ export function RideBottomSheet({
           <BookingPanel
             origin={origin}
             destination={destination}
+            preDispatchPreview={preDispatchPreview}
+            isPreDispatchLoading={isPreDispatchLoading}
+            preDispatchError={preDispatchError}
             onOriginChange={onOriginChange}
             onDestinationChange={onDestinationChange}
             onRequestRide={onRequestRide}

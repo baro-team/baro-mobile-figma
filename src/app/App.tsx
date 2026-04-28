@@ -12,6 +12,9 @@ export default function App() {
     setOrigin,
     destination,
     setDestination,
+    preDispatchPreview,
+    isPreDispatchLoading,
+    preDispatchError,
     estimatedCost,
     rideState,
     eta,
@@ -35,6 +38,8 @@ export default function App() {
         <MapStage
           origin={origin}
           destination={destination}
+          routePath={preDispatchPreview?.routePath ?? null}
+          distanceKm={preDispatchPreview?.distanceKm ?? null}
           rideState={rideState}
         />
       </div>
@@ -47,6 +52,9 @@ export default function App() {
           rideState={rideState}
           origin={origin}
           destination={destination}
+          preDispatchPreview={preDispatchPreview}
+          isPreDispatchLoading={isPreDispatchLoading}
+          preDispatchError={preDispatchError}
           eta={eta}
           searchRadius={searchRadius}
           estimatedCost={estimatedCost}
