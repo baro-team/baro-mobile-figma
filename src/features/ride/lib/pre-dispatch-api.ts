@@ -8,7 +8,7 @@ export async function requestPreDispatch(
   payload: PreDispatchRequest,
   signal?: AbortSignal,
 ): Promise<PreDispatchPreview> {
-  const response = await fetch("http://localhost:8082/dispatch/pre", {
+  const response = await fetch("/dispatch/pre", {
     method: "POST",
     headers: {
       Accept: "*/*",
