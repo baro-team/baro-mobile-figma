@@ -26,11 +26,11 @@ export function PendingPanel({
         />
 
         <div className="mt-4 flex flex-col items-center gap-3 p-3 text-center">
-          <div className="p-2.5 bg-cyan-400 rounded-full animate-pulse shadow-sm">
+          <div className="ds-icon-badge p-2.5 animate-pulse">
             <Car className="w-5 h-5 text-white" />
           </div>
 
-          <p className="text-gray-900 font-medium text-lg">
+          <p className="type-title ds-text-primary">
             {searchRadius}km 반경 안의 차량 찾는중...
           </p>
           <div className="flex justify-center">
@@ -55,7 +55,7 @@ export function PendingPanel({
       <RideSheetActions>
         <button
           onClick={onCancelRide}
-          className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold py-4 rounded-md transition-all text-lg"
+          className="type-title ds-button-secondary w-full"
         >
           취소
         </button>

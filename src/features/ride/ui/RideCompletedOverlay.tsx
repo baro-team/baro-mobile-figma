@@ -19,7 +19,7 @@ export function RideCompletedOverlay({
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="absolute inset-0 bg-black/20 backdrop-blur-sm z-40"
+        className="ds-overlay-scrim absolute inset-0 z-40"
       />
       <motion.div
         initial={{ y: "100%" }}
@@ -29,14 +29,14 @@ export function RideCompletedOverlay({
           damping: 30,
           stiffness: 300,
         }}
-        className="absolute bottom-0 left-0 right-0 z-50 bg-white backdrop-blur-xl rounded-t-3xl border-t border-gray-200 shadow-2xl"
+        className="ds-sheet-panel absolute bottom-0 left-0 right-0 z-50 backdrop-blur-xl"
       >
         <div className="relative p-5 pb-8">
-          <div className="w-12 h-1 bg-gray-300 rounded-md mx-auto mb-5"></div>
+          <div className="ds-sheet-handle mb-5 mt-0"></div>
 
           <button
             onClick={onConfirm}
-            className="absolute top-5 right-5 p-2 bg-gray-100 rounded-full text-gray-500 hover:text-gray-900 hover:bg-gray-200 transition-colors"
+            className="absolute top-5 right-5 flex size-10 items-center justify-center ds-radius-badge ds-surface-muted ds-shadow-soft ds-text-secondary hover:[color:var(--color-text-primary)] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -50,11 +50,11 @@ export function RideCompletedOverlay({
                 type: "spring",
                 stiffness: 300,
               }}
-              className="inline-block p-3 bg-cyan-400 rounded-full mb-3 shadow-sm"
+              className="ds-icon-badge inline-block p-3 mb-3"
             >
               <Car className="w-6 h-6 text-white" />
             </motion.div>
-            <h3 className="text-lg text-gray-900 font-semibold mb-1">
+            <h3 className="type-title ds-text-primary mb-1">
               차량이 목적지에 도착했습니다!
             </h3>
           </div>
@@ -67,7 +67,7 @@ export function RideCompletedOverlay({
           >
             <button
               onClick={onConfirm}
-              className="w-full py-3.5 bg-cyan-400 hover:bg-cyan-500 text-white font-semibold rounded-md active:scale-95 transition-all shadow-sm"
+              className="type-button ds-button-primary w-full"
             >
               확인
             </button>
