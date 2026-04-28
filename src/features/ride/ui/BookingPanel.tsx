@@ -22,6 +22,7 @@ type BookingPanelProps = {
   onDestinationChange: (value: string) => void;
   onOriginSelect: (place: PlaceSearchResult) => void;
   onDestinationSelect: (place: PlaceSearchResult) => void;
+  onRequestPreview: () => void;
   onRequestRide: () => void;
 };
 
@@ -43,11 +44,10 @@ export function BookingPanel({
   onDestinationChange,
   onOriginSelect,
   onDestinationSelect,
+  onRequestPreview,
   onRequestRide,
 }: BookingPanelProps) {
-  const canRequestRide = Boolean(
-    selectedOrigin && selectedDestination && preDispatchPreview,
-  );
+  const canRequestRide = Boolean(selectedOrigin && selectedDestination);
   const shouldShowPreviewSection = Boolean(
     selectedOrigin && selectedDestination,
   );
@@ -77,7 +77,12 @@ export function BookingPanel({
       return;
     }
 
-    onRequestRide();
+    if (preDispatchPreview) {
+      onRequestRide();
+      return;
+    }
+
+    onRequestPreview();
   };
 
   const renderPlaceSearchList = ({
@@ -250,7 +255,7 @@ export function BookingPanel({
         disabled={!canRequestRide}
         className="type-button ds-button-primary mt-5 w-full"
       >
-        배차 요청
+        {preDispatchPreview ? "배차 요청" : "예상 경로 보기"}
       </button>
     </form>
   );

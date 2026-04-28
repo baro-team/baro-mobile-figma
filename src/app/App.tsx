@@ -25,6 +25,7 @@ export default function App() {
     preDispatchPreview,
     isPreDispatchLoading,
     preDispatchError,
+    requestPreDispatchPreview,
     estimatedCost,
     rideState,
     eta,
@@ -48,6 +49,8 @@ export default function App() {
         <MapStage
           origin={origin}
           destination={destination}
+          originLocation={selectedOrigin}
+          destinationLocation={selectedDestination}
           routePath={preDispatchPreview?.routePath ?? null}
           distanceKm={preDispatchPreview?.distanceKm ?? null}
           rideState={rideState}
@@ -81,6 +84,7 @@ export default function App() {
           onDestinationChange={setDestination}
           onOriginSelect={selectOriginPlace}
           onDestinationSelect={selectDestinationPlace}
+          onRequestPreview={requestPreDispatchPreview}
           onRequestRide={requestRide}
           onCancelRide={cancelRide}
         />

@@ -2,11 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Navigation } from "lucide-react";
 import { loadKakaoMapSdk } from "../lib/kakao-map-sdk";
 import { RideState } from "../model/ride-machine";
-import { RoutePoint } from "../model/ride-types";
+import { RideLocation, RoutePoint } from "../model/ride-types";
 
 type MapStageProps = {
   origin: string;
   destination: string;
+  originLocation: RideLocation | null;
+  destinationLocation: RideLocation | null;
   routePath: RoutePoint[] | null;
   distanceKm: number | null;
   rideState: RideState;
@@ -61,14 +63,21 @@ function createMarkerContent(label: string, variant: "origin" | "destination") {
 function FallbackMapStage({
   origin,
   destination,
+  originLocation,
+  destinationLocation,
   distanceKm,
   rideState,
   routePath,
 }: MapStageProps) {
   const projectedRoutePoints = routePath ? getProjectedRoutePoints(routePath) : [];
-  const originMarkerPosition = projectedRoutePoints[0] ?? { x: 30, y: 40 };
+  const originMarkerPosition =
+    originLocation || projectedRoutePoints.length > 0
+      ? projectedRoutePoints[0] ?? { x: 30, y: 40 }
+      : null;
   const destinationMarkerPosition =
-    projectedRoutePoints[projectedRoutePoints.length - 1] ?? { x: 75, y: 70 };
+    destinationLocation || projectedRoutePoints.length > 0
+      ? projectedRoutePoints[projectedRoutePoints.length - 1] ?? { x: 75, y: 70 }
+      : null;
   const routePolylinePoints = projectedRoutePoints
     .map((point) => `${point.x},${point.y}`)
     .join(" ");
@@ -87,11 +96,11 @@ function FallbackMapStage({
         ))}
       </div>
 
-      {origin ? (
+      {origin && originMarkerPosition ? (
         <FallbackMarker position={originMarkerPosition} label="출발" variant="origin" />
       ) : null}
 
-      {destination ? (
+      {destination && destinationMarkerPosition ? (
         <FallbackMarker
           position={destinationMarkerPosition}
           label="도착"
@@ -168,11 +177,19 @@ function FallbackMarker({
 }
 
 export function MapStage(props: MapStageProps) {
-  const { origin, destination, routePath, distanceKm, rideState } = props;
+  const {
+    origin,
+    destination,
+    originLocation,
+    destinationLocation,
+    routePath,
+    distanceKm,
+    rideState,
+  } = props;
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const [isKakaoMapReady, setIsKakaoMapReady] = useState(false);
   const [shouldUseFallbackMap, setShouldUseFallbackMap] = useState(false);
-  const hasRoutePath = Boolean(routePath && routePath.length > 1);
+  const hasSelectedLocations = Boolean(originLocation || destinationLocation);
 
   const pathSignature = useMemo(
     () => routePath?.map(([lon, lat]) => `${lon}:${lat}`).join("|") ?? "",
@@ -209,50 +226,61 @@ export function MapStage(props: MapStageProps) {
     const routeLatLngs = routePath?.map(
       ([lon, lat]) => new kakao.maps.LatLng(lat, lon),
     ) ?? [];
-    const mapCenter = routeLatLngs[0] ?? new kakao.maps.LatLng(37.547, 127.091896);
+    const originLatLng = originLocation
+      ? new kakao.maps.LatLng(originLocation.lat, originLocation.lon)
+      : null;
+    const destinationLatLng = destinationLocation
+      ? new kakao.maps.LatLng(destinationLocation.lat, destinationLocation.lon)
+      : null;
+    const markerLatLngs = [originLatLng, destinationLatLng].filter(Boolean);
+    const mapCenter =
+      markerLatLngs[0] ??
+      routeLatLngs[0] ??
+      new kakao.maps.LatLng(37.547, 127.091896);
     const map = new kakao.maps.Map(mapContainerRef.current, {
       center: mapCenter,
-      level: hasRoutePath ? 7 : 5,
+      level: markerLatLngs.length > 1 ? 7 : 5,
     });
 
     const overlays: Array<{ setMap: (map: unknown | null) => void }> = [];
+    const bounds = new kakao.maps.LatLngBounds();
 
-    if (routeLatLngs.length > 0) {
-      const bounds = new kakao.maps.LatLngBounds();
-      routeLatLngs.forEach((latLng) => bounds.extend(latLng));
-
-      const polyline = new kakao.maps.Polyline({
-        map,
-        path: routeLatLngs,
-        strokeWeight: 4,
-        strokeColor: "#2563eb",
-        strokeOpacity: 0.9,
-        strokeStyle: "solid",
-      });
-      overlays.push(polyline);
-
-      map.setBounds(bounds, 40, 40, 40, 40);
-
+    if (originLatLng) {
+      bounds.extend(originLatLng);
       const originOverlay = new kakao.maps.CustomOverlay({
         map,
-        position: routeLatLngs[0],
+        position: originLatLng,
         content: createMarkerContent("출발", "origin"),
         yAnchor: 1.1,
       });
+      overlays.push(originOverlay);
+    }
+
+    if (destinationLatLng) {
+      bounds.extend(destinationLatLng);
       const destinationOverlay = new kakao.maps.CustomOverlay({
         map,
-        position: routeLatLngs[routeLatLngs.length - 1],
+        position: destinationLatLng,
         content: createMarkerContent("도착", "destination"),
         yAnchor: 1.1,
       });
+      overlays.push(destinationOverlay);
+    }
 
-      overlays.push(originOverlay, destinationOverlay);
+    if (markerLatLngs.length > 0) {
+      map.setBounds(bounds, 40, 40, 40, 40);
     }
 
     return () => {
       overlays.forEach((overlay) => overlay.setMap(null));
     };
-  }, [hasRoutePath, isKakaoMapReady, pathSignature, routePath]);
+  }, [
+    destinationLocation,
+    isKakaoMapReady,
+    originLocation,
+    pathSignature,
+    routePath,
+  ]);
 
   if (shouldUseFallbackMap || !isKakaoMapReady) {
     return <FallbackMapStage {...props} />;

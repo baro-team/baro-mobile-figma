@@ -78,6 +78,34 @@ export function useRideFlow() {
     selectedOrigin,
   ]);
 
+  const requestPreDispatchPreview = useCallback(async () => {
+    if (!selectedOrigin || !selectedDestination) {
+      return;
+    }
+
+    try {
+      setIsPreDispatchLoading(true);
+      setPreDispatchError(null);
+
+      const preview = await requestPreDispatch({
+        user_id: 1001,
+        origin: selectedOrigin,
+        destination: selectedDestination,
+      });
+
+      setPreDispatchPreview(preview);
+    } catch (error) {
+      setPreDispatchPreview(null);
+      setPreDispatchError(
+        error instanceof Error
+          ? error.message
+          : "사전 배차 예상 정보를 불러오지 못했습니다.",
+      );
+    } finally {
+      setIsPreDispatchLoading(false);
+    }
+  }, [selectedDestination, selectedOrigin]);
+
   const handleOriginChange = useCallback((value: string) => {
     setOrigin(value);
     setSelectedOrigin((current) =>
@@ -149,51 +177,13 @@ export function useRideFlow() {
   }, [clearAllTimers]);
 
   useEffect(() => {
-    if (!selectedOrigin || !selectedDestination) {
-      setPreDispatchPreview(null);
-      setPreDispatchError(null);
-      setIsPreDispatchLoading(false);
+    if (selectedOrigin && selectedDestination) {
       return;
     }
 
-    const controller = new AbortController();
-    const debounceTimer = window.setTimeout(async () => {
-      try {
-        setIsPreDispatchLoading(true);
-        setPreDispatchError(null);
-
-        const preview = await requestPreDispatch(
-          {
-            user_id: 1001,
-            origin: selectedOrigin,
-            destination: selectedDestination,
-          },
-          controller.signal,
-        );
-
-        setPreDispatchPreview(preview);
-      } catch (error) {
-        if (controller.signal.aborted) {
-          return;
-        }
-
-        setPreDispatchPreview(null);
-        setPreDispatchError(
-          error instanceof Error
-            ? error.message
-            : "사전 배차 예상 정보를 불러오지 못했습니다.",
-        );
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsPreDispatchLoading(false);
-        }
-      }
-    }, 350);
-
-    return () => {
-      controller.abort();
-      window.clearTimeout(debounceTimer);
-    };
+    setPreDispatchPreview(null);
+    setPreDispatchError(null);
+    setIsPreDispatchLoading(false);
   }, [selectedDestination, selectedOrigin]);
 
   useEffect(() => {
@@ -286,6 +276,7 @@ export function useRideFlow() {
     preDispatchPreview,
     isPreDispatchLoading,
     preDispatchError,
+    requestPreDispatchPreview,
     estimatedCost,
     rideState,
     eta,
