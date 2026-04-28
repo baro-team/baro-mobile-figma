@@ -18,6 +18,30 @@ declare global {
           setMap: (map: unknown | null) => void;
           setPosition?: (latLng: unknown) => void;
         };
+        services: {
+          Places: new () => {
+            keywordSearch: (
+              keyword: string,
+              callback: (
+                result: Array<{
+                  x: string;
+                  y: string;
+                  place_name: string;
+                  address_name: string;
+                  road_address_name: string;
+                }>,
+                status: string,
+                pagination: unknown,
+              ) => void,
+              options?: unknown,
+            ) => void;
+          };
+          Status: {
+            OK: string;
+            ZERO_RESULT: string;
+            ERROR: string;
+          };
+        };
       };
     };
   }
@@ -76,7 +100,7 @@ export function loadKakaoMapSdk() {
     const script = document.createElement("script");
     script.id = KAKAO_MAP_SDK_ID;
     script.async = true;
-    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_APP_KEY}&autoload=false`;
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_APP_KEY}&autoload=false&libraries=services`;
     script.addEventListener("load", handleLoad, { once: true });
     script.addEventListener(
       "error",

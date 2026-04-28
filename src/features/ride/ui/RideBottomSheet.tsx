@@ -1,5 +1,5 @@
 import { BookingPanel } from "./BookingPanel";
-import { PreDispatchPreview } from "../model/ride-types";
+import { PlaceSearchResult, PreDispatchPreview, RideLocation } from "../model/ride-types";
 import { MatchedPanel } from "./MatchedPanel";
 import { PendingPanel } from "./PendingPanel";
 import { RideState } from "../model/ride-machine";
@@ -9,6 +9,14 @@ type RideBottomSheetProps = {
   rideState: RideState;
   origin: string;
   destination: string;
+  selectedOrigin: RideLocation | null;
+  selectedDestination: RideLocation | null;
+  originSearchResults: PlaceSearchResult[];
+  destinationSearchResults: PlaceSearchResult[];
+  isOriginSearchLoading: boolean;
+  isDestinationSearchLoading: boolean;
+  originSearchError: string | null;
+  destinationSearchError: string | null;
   preDispatchPreview: PreDispatchPreview | null;
   isPreDispatchLoading: boolean;
   preDispatchError: string | null;
@@ -18,6 +26,8 @@ type RideBottomSheetProps = {
   isKeyboardOpen: boolean;
   onOriginChange: (value: string) => void;
   onDestinationChange: (value: string) => void;
+  onOriginSelect: (place: PlaceSearchResult) => void;
+  onDestinationSelect: (place: PlaceSearchResult) => void;
   onRequestRide: () => void;
   onCancelRide: () => void;
 };
@@ -26,6 +36,14 @@ export function RideBottomSheet({
   rideState,
   origin,
   destination,
+  selectedOrigin,
+  selectedDestination,
+  originSearchResults,
+  destinationSearchResults,
+  isOriginSearchLoading,
+  isDestinationSearchLoading,
+  originSearchError,
+  destinationSearchError,
   preDispatchPreview,
   isPreDispatchLoading,
   preDispatchError,
@@ -35,6 +53,8 @@ export function RideBottomSheet({
   isKeyboardOpen,
   onOriginChange,
   onDestinationChange,
+  onOriginSelect,
+  onDestinationSelect,
   onRequestRide,
   onCancelRide,
 }: RideBottomSheetProps) {
@@ -52,11 +72,21 @@ export function RideBottomSheet({
           <BookingPanel
             origin={origin}
             destination={destination}
+            selectedOrigin={selectedOrigin}
+            selectedDestination={selectedDestination}
+            originSearchResults={originSearchResults}
+            destinationSearchResults={destinationSearchResults}
+            isOriginSearchLoading={isOriginSearchLoading}
+            isDestinationSearchLoading={isDestinationSearchLoading}
+            originSearchError={originSearchError}
+            destinationSearchError={destinationSearchError}
             preDispatchPreview={preDispatchPreview}
             isPreDispatchLoading={isPreDispatchLoading}
             preDispatchError={preDispatchError}
             onOriginChange={onOriginChange}
             onDestinationChange={onDestinationChange}
+            onOriginSelect={onOriginSelect}
+            onDestinationSelect={onDestinationSelect}
             onRequestRide={onRequestRide}
           />
         );

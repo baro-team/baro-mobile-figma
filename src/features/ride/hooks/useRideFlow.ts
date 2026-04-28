@@ -1,14 +1,34 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { resolvePlaceInput } from "../lib/place-catalog";
+import { searchPlacesByKeyword } from "../lib/place-search-api";
 import { requestPreDispatch } from "../lib/pre-dispatch-api";
 import { RideState, transitionRideState } from "../model/ride-machine";
-import { PreDispatchPreview } from "../model/ride-types";
+import {
+  PlaceSearchResult,
+  PreDispatchPreview,
+  RideLocation,
+} from "../model/ride-types";
 
 type TimerId = ReturnType<typeof setTimeout>;
 
 export function useRideFlow() {
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
+  const [selectedOrigin, setSelectedOrigin] = useState<RideLocation | null>(null);
+  const [selectedDestination, setSelectedDestination] =
+    useState<RideLocation | null>(null);
+  const [originSearchResults, setOriginSearchResults] = useState<
+    PlaceSearchResult[]
+  >([]);
+  const [destinationSearchResults, setDestinationSearchResults] = useState<
+    PlaceSearchResult[]
+  >([]);
+  const [isOriginSearchLoading, setIsOriginSearchLoading] = useState(false);
+  const [isDestinationSearchLoading, setIsDestinationSearchLoading] =
+    useState(false);
+  const [originSearchError, setOriginSearchError] = useState<string | null>(null);
+  const [destinationSearchError, setDestinationSearchError] = useState<
+    string | null
+  >(null);
   const [preDispatchPreview, setPreDispatchPreview] =
     useState<PreDispatchPreview | null>(null);
   const [isPreDispatchLoading, setIsPreDispatchLoading] = useState(false);
@@ -33,7 +53,7 @@ export function useRideFlow() {
   }, []);
 
   const requestRide = useCallback(() => {
-    if (!origin || !destination || !preDispatchPreview) {
+    if (!selectedOrigin || !selectedDestination || !preDispatchPreview) {
       return;
     }
 
@@ -50,7 +70,47 @@ export function useRideFlow() {
       setRideState((current) => transitionRideState(current, "CAR_MATCHED"));
     }, 4000);
     schedule(() => setShowCarOverlay(true), 8000);
-  }, [clearAllTimers, destination, origin, preDispatchPreview, schedule]);
+  }, [
+    clearAllTimers,
+    preDispatchPreview,
+    schedule,
+    selectedDestination,
+    selectedOrigin,
+  ]);
+
+  const handleOriginChange = useCallback((value: string) => {
+    setOrigin(value);
+    setSelectedOrigin((current) =>
+      current?.name === value ? current : null,
+    );
+    setOriginSearchError(null);
+    setPreDispatchPreview(null);
+    setPreDispatchError(null);
+  }, []);
+
+  const handleDestinationChange = useCallback((value: string) => {
+    setDestination(value);
+    setSelectedDestination((current) =>
+      current?.name === value ? current : null,
+    );
+    setDestinationSearchError(null);
+    setPreDispatchPreview(null);
+    setPreDispatchError(null);
+  }, []);
+
+  const selectOriginPlace = useCallback((place: PlaceSearchResult) => {
+    setOrigin(place.name);
+    setSelectedOrigin(place);
+    setOriginSearchResults([]);
+    setOriginSearchError(null);
+  }, []);
+
+  const selectDestinationPlace = useCallback((place: PlaceSearchResult) => {
+    setDestination(place.name);
+    setSelectedDestination(place);
+    setDestinationSearchResults([]);
+    setDestinationSearchError(null);
+  }, []);
 
   const openDoor = useCallback(() => {
     setShowCarOverlay(false);
@@ -76,6 +136,12 @@ export function useRideFlow() {
     setEstimatedCost(null);
     setOrigin("");
     setDestination("");
+    setSelectedOrigin(null);
+    setSelectedDestination(null);
+    setOriginSearchResults([]);
+    setDestinationSearchResults([]);
+    setOriginSearchError(null);
+    setDestinationSearchError(null);
     setPreDispatchPreview(null);
     setPreDispatchError(null);
     setSearchRadius(5);
@@ -83,22 +149,9 @@ export function useRideFlow() {
   }, [clearAllTimers]);
 
   useEffect(() => {
-    const trimmedOrigin = origin.trim();
-    const trimmedDestination = destination.trim();
-
-    if (!trimmedOrigin || !trimmedDestination) {
+    if (!selectedOrigin || !selectedDestination) {
       setPreDispatchPreview(null);
       setPreDispatchError(null);
-      setIsPreDispatchLoading(false);
-      return;
-    }
-
-    const resolvedOrigin = resolvePlaceInput(trimmedOrigin);
-    const resolvedDestination = resolvePlaceInput(trimmedDestination);
-
-    if (!resolvedOrigin || !resolvedDestination) {
-      setPreDispatchPreview(null);
-      setPreDispatchError("현재는 건대/홍대 데모 좌표만 지원합니다.");
       setIsPreDispatchLoading(false);
       return;
     }
@@ -112,8 +165,8 @@ export function useRideFlow() {
         const preview = await requestPreDispatch(
           {
             user_id: 1001,
-            origin: resolvedOrigin,
-            destination: resolvedDestination,
+            origin: selectedOrigin,
+            destination: selectedDestination,
           },
           controller.signal,
         );
@@ -141,15 +194,95 @@ export function useRideFlow() {
       controller.abort();
       window.clearTimeout(debounceTimer);
     };
-  }, [destination, origin]);
+  }, [selectedDestination, selectedOrigin]);
+
+  useEffect(() => {
+    const trimmedOrigin = origin.trim();
+
+    if (!trimmedOrigin) {
+      setOriginSearchResults([]);
+      setOriginSearchError(null);
+      setIsOriginSearchLoading(false);
+      return;
+    }
+
+    if (selectedOrigin?.name === origin) {
+      return;
+    }
+
+    const debounceTimer = window.setTimeout(async () => {
+      try {
+        setIsOriginSearchLoading(true);
+        setOriginSearchError(null);
+        const results = await searchPlacesByKeyword(trimmedOrigin);
+        setOriginSearchResults(results);
+      } catch (error) {
+        setOriginSearchResults([]);
+        setOriginSearchError(
+          error instanceof Error ? error.message : "출발지 검색에 실패했습니다.",
+        );
+      } finally {
+        setIsOriginSearchLoading(false);
+      }
+    }, 250);
+
+    return () => {
+      window.clearTimeout(debounceTimer);
+    };
+  }, [origin, selectedOrigin]);
+
+  useEffect(() => {
+    const trimmedDestination = destination.trim();
+
+    if (!trimmedDestination) {
+      setDestinationSearchResults([]);
+      setDestinationSearchError(null);
+      setIsDestinationSearchLoading(false);
+      return;
+    }
+
+    if (selectedDestination?.name === destination) {
+      return;
+    }
+
+    const debounceTimer = window.setTimeout(async () => {
+      try {
+        setIsDestinationSearchLoading(true);
+        setDestinationSearchError(null);
+        const results = await searchPlacesByKeyword(trimmedDestination);
+        setDestinationSearchResults(results);
+      } catch (error) {
+        setDestinationSearchResults([]);
+        setDestinationSearchError(
+          error instanceof Error ? error.message : "목적지 검색에 실패했습니다.",
+        );
+      } finally {
+        setIsDestinationSearchLoading(false);
+      }
+    }, 250);
+
+    return () => {
+      window.clearTimeout(debounceTimer);
+    };
+  }, [destination, selectedDestination]);
 
   useEffect(() => clearAllTimers, [clearAllTimers]);
 
   return {
     origin,
-    setOrigin,
+    setOrigin: handleOriginChange,
     destination,
-    setDestination,
+    setDestination: handleDestinationChange,
+    selectedOrigin,
+    selectedDestination,
+    originSearchResults,
+    destinationSearchResults,
+    isOriginSearchLoading,
+    isDestinationSearchLoading,
+    originSearchError,
+    destinationSearchError,
+    selectOriginPlace,
+    selectDestinationPlace,
     preDispatchPreview,
     isPreDispatchLoading,
     preDispatchError,

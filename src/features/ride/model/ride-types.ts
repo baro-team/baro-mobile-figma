@@ -4,6 +4,11 @@ export type RideLocation = {
   name: string;
 };
 
+export type PlaceSearchResult = RideLocation & {
+  addressName: string;
+  roadAddressName: string;
+};
+
 export type RoutePoint = [lon: number, lat: number];
 
 export type PreDispatchRequest = {

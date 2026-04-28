@@ -12,6 +12,16 @@ export default function App() {
     setOrigin,
     destination,
     setDestination,
+    selectedOrigin,
+    selectedDestination,
+    originSearchResults,
+    destinationSearchResults,
+    isOriginSearchLoading,
+    isDestinationSearchLoading,
+    originSearchError,
+    destinationSearchError,
+    selectOriginPlace,
+    selectDestinationPlace,
     preDispatchPreview,
     isPreDispatchLoading,
     preDispatchError,
@@ -52,6 +62,14 @@ export default function App() {
           rideState={rideState}
           origin={origin}
           destination={destination}
+          selectedOrigin={selectedOrigin}
+          selectedDestination={selectedDestination}
+          originSearchResults={originSearchResults}
+          destinationSearchResults={destinationSearchResults}
+          isOriginSearchLoading={isOriginSearchLoading}
+          isDestinationSearchLoading={isDestinationSearchLoading}
+          originSearchError={originSearchError}
+          destinationSearchError={destinationSearchError}
           preDispatchPreview={preDispatchPreview}
           isPreDispatchLoading={isPreDispatchLoading}
           preDispatchError={preDispatchError}
@@ -61,6 +79,8 @@ export default function App() {
           isKeyboardOpen={isKeyboardOpen}
           onOriginChange={setOrigin}
           onDestinationChange={setDestination}
+          onOriginSelect={selectOriginPlace}
+          onDestinationSelect={selectDestinationPlace}
           onRequestRide={requestRide}
           onCancelRide={cancelRide}
         />
