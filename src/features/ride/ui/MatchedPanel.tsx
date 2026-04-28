@@ -1,6 +1,7 @@
 import { RideFareSummary } from "./RideFareSummary";
 import { RideRouteSummary } from "./RideRouteSummary";
 import { RideSheetActions } from "./RideSheetActions";
+import { RideSheetPanel } from "./RideSheetPanel";
 import { RideSheetSection } from "./RideSheetSection";
 import { RideVehicleCard } from "./RideVehicleCard";
 
@@ -20,12 +21,24 @@ export function MatchedPanel({
   onCancelRide,
 }: MatchedPanelProps) {
   return (
-    <div className="flex flex-col">
-      <div className="flex flex-row items-center gap-1.5 mb-4">
-        <p className="type-display ds-text-primary">{arrivalTime}</p>
-        <p className="type-label ds-text-secondary"> 도착 예정 </p>
-      </div>
-
+    <RideSheetPanel
+      header={(
+        <div className="flex flex-row items-center gap-1.5">
+          <p className="type-display ds-text-primary">{arrivalTime}</p>
+          <p className="type-label ds-text-secondary"> 도착 예정 </p>
+        </div>
+      )}
+      actions={
+        <RideSheetActions>
+          <button
+            onClick={onCancelRide}
+            className="type-title ds-button-secondary flex-1"
+          >
+            배차 취소
+          </button>
+        </RideSheetActions>
+      }
+    >
       <RideSheetSection>
         <RideVehicleCard label="123가 1234" rounded="2xl" />
         <div className="relative mt-4">
@@ -36,15 +49,6 @@ export function MatchedPanel({
           <RideFareSummary formattedEstimatedCost={formattedEstimatedCost} />
         </div>
       </RideSheetSection>
-
-      <RideSheetActions>
-        <button
-          onClick={onCancelRide}
-          className="type-title ds-button-secondary flex-1"
-        >
-          배차 취소
-        </button>
-      </RideSheetActions>
-    </div>
+    </RideSheetPanel>
   );
 }

@@ -1,7 +1,7 @@
 import { FormEvent } from "react";
-import { Dot } from "lucide-react";
 import { PlaceSearchResult, PreDispatchPreview, RideLocation } from "../model/ride-types";
-import { RideRouteSummary } from "./RideRouteSummary";
+import { RideSheetActions } from "./RideSheetActions";
+import { RideSheetPanel } from "./RideSheetPanel";
 import { RideSheetSection } from "./RideSheetSection";
 
 type BookingPanelProps = {
@@ -142,75 +142,67 @@ export function BookingPanel({
 
   return (
     <form onSubmit={handleSubmit}>
-      <RideSheetSection>
-        <div className="flex flex-col gap-3">
-          <div>
-            <div className="relative">
-              <div className="ds-text-primary absolute top-1/2 left-4 -translate-y-1/2">
-                <div className="h-2.5 w-2.5 rounded-full bg-[currentColor]" />
+      <RideSheetPanel
+        actions={
+          <RideSheetActions>
+            <button
+              type="submit"
+              disabled={!canRequestRide}
+              className="type-button ds-button-primary w-full"
+            >
+              {preDispatchPreview ? "배차 요청" : "예상 경로 보기"}
+            </button>
+          </RideSheetActions>
+        }
+      >
+        <RideSheetSection>
+          <div className="flex flex-col gap-3">
+            <div>
+              <div className="relative">
+                <div className="ds-text-primary absolute top-1/2 left-4 -translate-y-1/2">
+                  <div className="h-2.5 w-2.5 rounded-full bg-[currentColor]" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="출발지"
+                  value={origin}
+                  onChange={(e) => onOriginChange(e.target.value)}
+                  className="type-label ds-input ds-text-primary w-full pl-10 pr-3 py-3.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                />
               </div>
-              <input
-                type="text"
-                placeholder="출발지"
-                value={origin}
-                onChange={(e) => onOriginChange(e.target.value)}
-                className="type-label ds-input ds-text-primary w-full pl-10 pr-3 py-3.5 disabled:opacity-50 disabled:cursor-not-allowed"
-              />
+              {renderPlaceSearchList({
+                results: originSearchResults,
+                isLoading: isOriginSearchLoading,
+                error: originSearchError,
+                onSelect: onOriginSelect,
+              })}
             </div>
-            {selectedOrigin ? (
-              <p className="type-caption ds-text-secondary mt-2 px-1">
-                선택 좌표: {selectedOrigin.lat.toFixed(6)},{" "}
-                {selectedOrigin.lon.toFixed(6)}
-              </p>
-            ) : null}
-            {renderPlaceSearchList({
-              results: originSearchResults,
-              isLoading: isOriginSearchLoading,
-              error: originSearchError,
-              onSelect: onOriginSelect,
-            })}
-          </div>
 
-          <div>
-            <div className="relative">
-              <div className="absolute top-1/2 -translate-y-1/2 text-cyan-400">
-                <Dot className="w-10 h-10" />
+            <div>
+              <div className="relative">
+                <div className="absolute top-1/2 left-4 -translate-y-1/2 text-cyan-400">
+                  <div className="h-2.5 w-2.5 rounded-full bg-[currentColor]" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="목적지"
+                  value={destination}
+                  onChange={(e) => onDestinationChange(e.target.value)}
+                  className="type-label ds-input ds-text-primary w-full pl-10 pr-3 py-3.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                />
               </div>
-              <input
-                type="text"
-                placeholder="목적지"
-                value={destination}
-                onChange={(e) => onDestinationChange(e.target.value)}
-                className="type-label ds-input ds-text-primary w-full pl-10 pr-3 py-3.5 disabled:opacity-50 disabled:cursor-not-allowed"
-              />
+              {renderPlaceSearchList({
+                results: destinationSearchResults,
+                isLoading: isDestinationSearchLoading,
+                error: destinationSearchError,
+                onSelect: onDestinationSelect,
+              })}
             </div>
-            {selectedDestination ? (
-              <p className="type-caption ds-text-secondary mt-2 px-1">
-                선택 좌표: {selectedDestination.lat.toFixed(6)},{" "}
-                {selectedDestination.lon.toFixed(6)}
-              </p>
-            ) : null}
-            {renderPlaceSearchList({
-              results: destinationSearchResults,
-              isLoading: isDestinationSearchLoading,
-              error: destinationSearchError,
-              onSelect: onDestinationSelect,
-            })}
           </div>
-        </div>
-      </RideSheetSection>
+        </RideSheetSection>
 
-      {shouldShowPreviewSection ? (
-        <RideSheetSection title="사전 배차 예상" subtitle="배차 전 예상 경로와 요금을 먼저 확인할 수 있습니다.">
-          <div className="mt-5">
-            <RideRouteSummary
-              origin={origin}
-              destination={destination}
-              compact
-            />
-          </div>
-
-          <div className="mt-4">
+        {shouldShowPreviewSection ? (
+          <div>
             {isPreDispatchLoading ? (
               <div className="ds-route-surface px-4 py-4">
                 <p className="type-label ds-text-secondary">
@@ -247,16 +239,8 @@ export function BookingPanel({
               </div>
             ) : null}
           </div>
-        </RideSheetSection>
-      ) : null}
-
-      <button
-        type="submit"
-        disabled={!canRequestRide}
-        className="type-button ds-button-primary mt-5 w-full"
-      >
-        {preDispatchPreview ? "배차 요청" : "예상 경로 보기"}
-      </button>
+        ) : null}
+      </RideSheetPanel>
     </form>
   );
 }
