@@ -36,7 +36,7 @@ export function RideCompletedOverlay({
 
           <button
             onClick={onConfirm}
-            className="absolute top-5 right-5 p-2 ds-button-secondary ds-radius-badge ds-text-secondary hover:[color:var(--color-text-primary)] transition-colors"
+            className="absolute top-5 right-5 flex size-10 items-center justify-center ds-radius-badge ds-surface-muted ds-shadow-soft ds-text-secondary hover:[color:var(--color-text-primary)] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>

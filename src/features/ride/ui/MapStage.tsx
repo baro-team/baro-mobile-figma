@@ -24,7 +24,7 @@ export function MapStage({ origin, destination, rideState }: MapStageProps) {
 
       {origin && (
         <div className="absolute top-[40%] left-[30%] flex flex-col items-center gap-2">
-          <div className="ds-icon-badge p-3">
+          <div className="ds-icon-badge-neutral p-3">
             <MapPin className="w-6 h-6 text-white" />
           </div>
           <div className="ds-inline-card px-3 py-1 rounded-lg backdrop-blur-sm">

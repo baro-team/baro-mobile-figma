@@ -34,7 +34,7 @@ export function BookingPanel({
       <RideSheetSection>
         <div className="flex flex-col gap-3">
           <div className="relative">
-            <div className="absolute top-1/2 left-4 -translate-y-1/2 text-cyan-400">
+            <div className="ds-text-primary absolute top-1/2 left-4 -translate-y-1/2">
               <Circle className="w-2 h-2" />
             </div>
             <input

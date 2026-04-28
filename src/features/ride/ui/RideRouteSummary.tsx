@@ -18,7 +18,7 @@ export function RideRouteSummary({
   return (
     <div className={containerClassName}>
       <div className="flex items-center">
-        <Dot className="w-10 h-10 text-black" />
+        <Dot className="ds-text-primary w-10 h-10" />
         <p className="type-body ds-text-secondary">{origin}</p>
       </div>
       <div className="flex items-center">
