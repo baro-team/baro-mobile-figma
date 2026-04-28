@@ -4,14 +4,11 @@ import {
   PreDispatchResponse,
 } from "../model/ride-types";
 
-const DISPATCH_API_BASE_URL =
-  import.meta.env.VITE_DISPATCH_API_BASE_URL ?? "http://localhost:8082";
-
 export async function requestPreDispatch(
   payload: PreDispatchRequest,
   signal?: AbortSignal,
 ): Promise<PreDispatchPreview> {
-  const response = await fetch(`${DISPATCH_API_BASE_URL}/dispatch/pre`, {
+  const response = await fetch("http://localhost:8082/dispatch/pre", {
     method: "POST",
     headers: {
       Accept: "*/*",

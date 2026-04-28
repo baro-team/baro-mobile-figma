@@ -1,4 +1,6 @@
-import { MapPin, Navigation } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Navigation } from "lucide-react";
+import { loadKakaoMapSdk } from "../lib/kakao-map-sdk";
 import { RideState } from "../model/ride-machine";
 import { RoutePoint } from "../model/ride-types";
 
@@ -8,6 +10,11 @@ type MapStageProps = {
   routePath: RoutePoint[] | null;
   distanceKm: number | null;
   rideState: RideState;
+};
+
+type ProjectedPoint = {
+  x: number;
+  y: number;
 };
 
 const MAP_PADDING = 0.16;
@@ -36,12 +43,27 @@ function getProjectedRoutePoints(routePath: RoutePoint[]) {
   });
 }
 
-export function MapStage({
+function createMarkerContent(label: string, variant: "origin" | "destination") {
+  const badgeColor = variant === "origin" ? "#030213" : "#22d3ee";
+
+  return `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+      <div style="width:48px;height:48px;border-radius:9999px;background:${badgeColor};box-shadow:0 1px 2px rgb(15 23 42 / 0.08);display:flex;align-items:center;justify-content:center;color:#ffffff;font-size:18px;font-weight:700;">
+        ${variant === "origin" ? "출" : "도"}
+      </div>
+      <div style="padding:4px 12px;border-radius:12px;border:1px solid #e5e7eb;background:rgb(255 255 255 / 0.92);box-shadow:0 1px 2px rgb(15 23 42 / 0.08);backdrop-filter:blur(8px);font-size:12px;line-height:16px;color:#6b7280;white-space:nowrap;">
+        ${label}
+      </div>
+    </div>
+  `;
+}
+
+function FallbackMapStage({
   origin,
   destination,
-  routePath,
   distanceKm,
   rideState,
+  routePath,
 }: MapStageProps) {
   const projectedRoutePoints = routePath ? getProjectedRoutePoints(routePath) : [];
   const originMarkerPosition = projectedRoutePoints[0] ?? { x: 30, y: 40 };
@@ -65,41 +87,19 @@ export function MapStage({
         ))}
       </div>
 
-      {origin && (
-        <div
-          className="absolute flex flex-col items-center gap-2 -translate-x-1/2 -translate-y-1/2"
-          style={{
-            left: `${originMarkerPosition.x}%`,
-            top: `${originMarkerPosition.y}%`,
-          }}
-        >
-          <div className="ds-icon-badge-neutral p-3">
-            <MapPin className="w-6 h-6 text-white" />
-          </div>
-          <div className="ds-inline-card px-3 py-1 rounded-lg backdrop-blur-sm">
-            <p className="type-caption ds-text-secondary">출발</p>
-          </div>
-        </div>
-      )}
+      {origin ? (
+        <FallbackMarker position={originMarkerPosition} label="출발" variant="origin" />
+      ) : null}
 
-      {destination && (
-        <div
-          className="absolute flex flex-col items-center gap-2 -translate-x-1/2 -translate-y-1/2"
-          style={{
-            left: `${destinationMarkerPosition.x}%`,
-            top: `${destinationMarkerPosition.y}%`,
-          }}
-        >
-          <div className="ds-icon-badge p-3">
-            <MapPin className="w-6 h-6 text-white" />
-          </div>
-          <div className="ds-inline-card px-3 py-1 rounded-lg backdrop-blur-sm">
-            <p className="type-caption ds-text-secondary">도착</p>
-          </div>
-        </div>
-      )}
+      {destination ? (
+        <FallbackMarker
+          position={destinationMarkerPosition}
+          label="도착"
+          variant="destination"
+        />
+      ) : null}
 
-      {origin && destination && routePolylinePoints && (
+      {origin && destination && routePolylinePoints ? (
         <svg className="absolute inset-0 w-full h-full pointer-events-none">
           <polyline
             points={routePolylinePoints}
@@ -117,7 +117,7 @@ export function MapStage({
             </linearGradient>
           </defs>
         </svg>
-      )}
+      ) : null}
 
       {(rideState === "matched" || rideState === "riding") && (
         <div className="absolute top-[35%] left-[45%] animate-pulse">
@@ -127,13 +127,156 @@ export function MapStage({
         </div>
       )}
 
-      {distanceKm !== null && (
+      {distanceKm !== null ? (
         <div className="ds-inline-card absolute left-4 px-4 py-2 backdrop-blur-md rounded-xl bottom-[calc(1rem+var(--safe-area-bottom))]">
           <p className="type-caption ds-text-secondary">
             {distanceKm.toFixed(1)}km
           </p>
         </div>
+      ) : null}
+    </div>
+  );
+}
+
+function FallbackMarker({
+  position,
+  label,
+  variant,
+}: {
+  position: ProjectedPoint;
+  label: string;
+  variant: "origin" | "destination";
+}) {
+  return (
+    <div
+      className="absolute flex flex-col items-center gap-2 -translate-x-1/2 -translate-y-1/2"
+      style={{
+        left: `${position.x}%`,
+        top: `${position.y}%`,
+      }}
+    >
+      <div className={variant === "origin" ? "ds-icon-badge-neutral p-3" : "ds-icon-badge p-3"}>
+        <div className="flex h-6 w-6 items-center justify-center text-sm font-bold text-white">
+          {variant === "origin" ? "출" : "도"}
+        </div>
+      </div>
+      <div className="ds-inline-card px-3 py-1 rounded-lg backdrop-blur-sm">
+        <p className="type-caption ds-text-secondary">{label}</p>
+      </div>
+    </div>
+  );
+}
+
+export function MapStage(props: MapStageProps) {
+  const { origin, destination, routePath, distanceKm, rideState } = props;
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const [isKakaoMapReady, setIsKakaoMapReady] = useState(false);
+  const [shouldUseFallbackMap, setShouldUseFallbackMap] = useState(false);
+  const hasRoutePath = Boolean(routePath && routePath.length > 1);
+
+  const pathSignature = useMemo(
+    () => routePath?.map(([lon, lat]) => `${lon}:${lat}`).join("|") ?? "",
+    [routePath],
+  );
+
+  useEffect(() => {
+    let isUnmounted = false;
+
+    loadKakaoMapSdk()
+      .then(() => {
+        if (!isUnmounted) {
+          setIsKakaoMapReady(true);
+          setShouldUseFallbackMap(false);
+        }
+      })
+      .catch(() => {
+        if (!isUnmounted) {
+          setShouldUseFallbackMap(true);
+        }
+      });
+
+    return () => {
+      isUnmounted = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isKakaoMapReady || !mapContainerRef.current || !window.kakao?.maps) {
+      return;
+    }
+
+    const { kakao } = window;
+    const routeLatLngs = routePath?.map(
+      ([lon, lat]) => new kakao.maps.LatLng(lat, lon),
+    ) ?? [];
+    const mapCenter = routeLatLngs[0] ?? new kakao.maps.LatLng(37.547, 127.091896);
+    const map = new kakao.maps.Map(mapContainerRef.current, {
+      center: mapCenter,
+      level: hasRoutePath ? 7 : 5,
+    });
+
+    const overlays: Array<{ setMap: (map: unknown | null) => void }> = [];
+
+    if (routeLatLngs.length > 0) {
+      const bounds = new kakao.maps.LatLngBounds();
+      routeLatLngs.forEach((latLng) => bounds.extend(latLng));
+
+      const polyline = new kakao.maps.Polyline({
+        map,
+        path: routeLatLngs,
+        strokeWeight: 4,
+        strokeColor: "#2563eb",
+        strokeOpacity: 0.9,
+        strokeStyle: "solid",
+      });
+      overlays.push(polyline);
+
+      map.setBounds(bounds, 40, 40, 40, 40);
+
+      const originOverlay = new kakao.maps.CustomOverlay({
+        map,
+        position: routeLatLngs[0],
+        content: createMarkerContent("출발", "origin"),
+        yAnchor: 1.1,
+      });
+      const destinationOverlay = new kakao.maps.CustomOverlay({
+        map,
+        position: routeLatLngs[routeLatLngs.length - 1],
+        content: createMarkerContent("도착", "destination"),
+        yAnchor: 1.1,
+      });
+
+      overlays.push(originOverlay, destinationOverlay);
+    }
+
+    return () => {
+      overlays.forEach((overlay) => overlay.setMap(null));
+    };
+  }, [hasRoutePath, isKakaoMapReady, pathSignature, routePath]);
+
+  if (shouldUseFallbackMap || !isKakaoMapReady) {
+    return <FallbackMapStage {...props} />;
+  }
+
+  return (
+    <div className="relative w-full flex-1 min-h-0 overflow-hidden bg-[#eef3f8]">
+      <div ref={mapContainerRef} className="absolute inset-0" />
+
+      {(rideState === "matched" || rideState === "riding") && (
+        <div className="absolute top-[35%] left-[45%] z-10 animate-pulse">
+          <div className="ds-icon-badge p-2">
+            <Navigation className="w-5 h-5 text-white" />
+          </div>
+        </div>
       )}
+
+      {distanceKm !== null ? (
+        <div className="ds-inline-card absolute left-4 z-10 px-4 py-2 backdrop-blur-md rounded-xl bottom-[calc(1rem+var(--safe-area-bottom))]">
+          <p className="type-caption ds-text-secondary">
+            {distanceKm.toFixed(1)}km
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 }
