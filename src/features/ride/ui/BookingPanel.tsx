@@ -42,7 +42,7 @@ export function BookingPanel({
               placeholder="출발지"
               value={origin}
               onChange={(e) => onOriginChange(e.target.value)}
-              className="type-label w-full border border-transparent pl-10 pr-3 py-3.5 bg-gray-50 rounded-md text-gray-900 placeholder:text-gray-400 outline-none focus:border-cyan-400 focus:bg-white focus:shadow-[0_0_0_2px_rgba(34,211,238,0.18)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="type-label ds-input ds-text-primary w-full pl-10 pr-3 py-3.5 disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -55,7 +55,7 @@ export function BookingPanel({
               placeholder="목적지"
               value={destination}
               onChange={(e) => onDestinationChange(e.target.value)}
-              className="type-label w-full border border-transparent pl-10 pr-3 py-3.5 bg-gray-50 rounded-md text-gray-900 placeholder:text-gray-400 outline-none focus:border-cyan-400 focus:bg-white focus:shadow-[0_0_0_2px_rgba(34,211,238,0.18)] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="type-label ds-input ds-text-primary w-full pl-10 pr-3 py-3.5 disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
         </div>
@@ -64,7 +64,7 @@ export function BookingPanel({
       <button
         type="submit"
         disabled={!canRequestRide}
-        className="type-button mt-5 w-full py-3.5 bg-cyan-400 hover:bg-cyan-500 disabled:bg-gray-200 disabled:text-gray-400 text-white rounded-md active:scale-[0.99] transition-all shadow-sm disabled:shadow-none"
+        className="type-button ds-button-primary mt-5 w-full"
       >
         배차 요청
       </button>

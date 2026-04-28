@@ -15,7 +15,7 @@ export function CarArrivedOverlay({ visible, onOpenDoor }: CarArrivedOverlayProp
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="absolute inset-0 bg-black/20 backdrop-blur-sm z-40"
+        className="ds-overlay-scrim absolute inset-0 z-40"
       />
       <motion.div
         initial={{ y: "100%" }}
@@ -25,15 +25,15 @@ export function CarArrivedOverlay({ visible, onOpenDoor }: CarArrivedOverlayProp
           damping: 30,
           stiffness: 300,
         }}
-        className="absolute bottom-0 left-0 right-0 z-50 bg-white backdrop-blur-xl rounded-t-3xl border-t border-gray-200 shadow-2xl"
+        className="ds-sheet-panel absolute bottom-0 left-0 right-0 z-50 backdrop-blur-xl"
       >
         <div className="relative p-5 pb-8">
-          <div className="w-12 h-1 bg-gray-300 rounded-md mx-auto mb-5"></div>
-          <h3 className="type-title text-center text-gray-900 mb-3">
+          <div className="ds-sheet-handle mb-5 mt-0"></div>
+          <h3 className="type-title ds-text-primary text-center mb-3">
             차량이 도착했습니다!
           </h3>
           <div className="relative mb-5">
-            <div className="relative w-full h-40 rounded-md overflow-hidden">
+            <div className="ds-radius-control relative w-full h-40 overflow-hidden">
               <motion.div
                 initial={{ x: -100, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
@@ -151,12 +151,12 @@ export function CarArrivedOverlay({ visible, onOpenDoor }: CarArrivedOverlayProp
 
           <div className="space-y-3 p-3">
             <div className="flex justify-between items-center">
-              <span className="type-label text-gray-600">차량ID</span>
-              <span className="type-label-strong text-gray-900">WX-1212</span>
+              <span className="type-label ds-text-secondary">차량ID</span>
+              <span className="type-label-strong ds-text-primary">WX-1212</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="type-label text-gray-600">차량번호</span>
-              <span className="type-label-strong text-gray-900">123가 1234</span>
+              <span className="type-label ds-text-secondary">차량번호</span>
+              <span className="type-label-strong ds-text-primary">123가 1234</span>
             </div>
           </div>
 
@@ -168,7 +168,7 @@ export function CarArrivedOverlay({ visible, onOpenDoor }: CarArrivedOverlayProp
           >
             <button
               onClick={onOpenDoor}
-              className="type-button w-full py-3.5 bg-cyan-400 hover:bg-cyan-500 text-white rounded-md active:scale-95 transition-all shadow-sm"
+              className="type-button ds-button-primary w-full"
             >
               잠금 해제
             </button>

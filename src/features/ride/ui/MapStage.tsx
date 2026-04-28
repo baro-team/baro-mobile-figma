@@ -24,22 +24,22 @@ export function MapStage({ origin, destination, rideState }: MapStageProps) {
 
       {origin && (
         <div className="absolute top-[40%] left-[30%] flex flex-col items-center gap-2">
-          <div className="p-3 bg-cyan-400 rounded-full shadow-lg">
+          <div className="ds-icon-badge p-3">
             <MapPin className="w-6 h-6 text-white" />
           </div>
-          <div className="px-3 py-1 bg-white/90 backdrop-blur-sm rounded-lg border border-gray-200 shadow-sm">
-            <p className="type-caption text-gray-700">출발</p>
+          <div className="ds-inline-card px-3 py-1 rounded-lg backdrop-blur-sm">
+            <p className="type-caption ds-text-secondary">출발</p>
           </div>
         </div>
       )}
 
       {destination && (
         <div className="absolute bottom-[30%] right-[25%] flex flex-col items-center gap-2">
-          <div className="p-3 bg-cyan-500 rounded-full shadow-lg">
+          <div className="ds-icon-badge p-3">
             <MapPin className="w-6 h-6 text-white" />
           </div>
-          <div className="px-3 py-1 bg-white/90 backdrop-blur-sm rounded-lg border border-gray-200 shadow-sm">
-            <p className="type-caption text-gray-700">도착</p>
+          <div className="ds-inline-card px-3 py-1 rounded-lg backdrop-blur-sm">
+            <p className="type-caption ds-text-secondary">도착</p>
           </div>
         </div>
       )}
@@ -65,15 +65,15 @@ export function MapStage({ origin, destination, rideState }: MapStageProps) {
 
       {(rideState === "matched" || rideState === "riding") && (
         <div className="absolute top-[35%] left-[45%] animate-pulse">
-          <div className="p-2 bg-cyan-400 rounded-full shadow-lg">
+          <div className="ds-icon-badge p-2">
             <Navigation className="w-5 h-5 text-white" />
           </div>
         </div>
       )}
 
       {rideState !== "booking" && (
-        <div className="absolute left-4 px-4 py-2 bg-white/90 backdrop-blur-md rounded-xl border border-gray-200 shadow-sm bottom-[calc(1rem+var(--safe-area-bottom))]">
-          <p className="type-caption text-gray-700">13km</p>
+        <div className="ds-inline-card absolute left-4 px-4 py-2 backdrop-blur-md rounded-xl bottom-[calc(1rem+var(--safe-area-bottom))]">
+          <p className="type-caption ds-text-secondary">13km</p>
         </div>
       )}
     </div>
