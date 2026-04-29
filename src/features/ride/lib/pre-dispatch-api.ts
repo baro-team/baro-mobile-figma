@@ -4,17 +4,11 @@ import {
   PreDispatchResponse,
 } from "../model/ride-types";
 
-const DISPATCH_API_BASE_URL = import.meta.env.VITE_DISPATCH_API_BASE_URL;
-
 export async function requestPreDispatch(
   payload: PreDispatchRequest,
   signal?: AbortSignal,
 ): Promise<PreDispatchPreview> {
-  if (!DISPATCH_API_BASE_URL) {
-    throw new Error("VITE_DISPATCH_API_BASE_URL이 설정되지 않았습니다.");
-  }
-
-  const response = await fetch(`${DISPATCH_API_BASE_URL}/dispatch/pre`, {
+  const response = await fetch("/api/dispatch/pre", {
     method: "POST",
     headers: {
       Accept: "*/*",
