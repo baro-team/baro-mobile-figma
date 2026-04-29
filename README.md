@@ -59,6 +59,7 @@ pnpm run dev
 
 ```bash
 VITE_KAKAO_MAP_APP_KEY=your_kakao_javascript_key
+VITE_DISPATCH_API_BASE_URL=https://your-dispatch-api.example.com
 ```
 
 ### 3. 프로덕션 빌드
@@ -137,4 +138,4 @@ PR 생성 또는 갱신 시 GitHub Actions를 통해 Vercel Preview 배포를 �
 - 로컬 개발 환경에서는 `pnpm` 설치가 필요합니다.
 - 카카오맵을 실제로 띄우려면 카카오 개발자 콘솔에 로컬/배포 도메인을 등록해야 합니다.
 - 빌드 산출물 `dist/`와 의존성 디렉터리 `node_modules/`는 Git에 포함하지 않습니다.
-- `pre배차` 예상 정보는 카카오 장소 검색으로 좌표를 해석한 뒤 `/dispatch/pre`를 호출하며, 로컬 개발에서는 Vite proxy를 통해 `http://localhost:8082`로 전달됩니다.
+- `pre배차` 예상 정보는 카카오 장소 검색으로 좌표를 해석한 뒤 `VITE_DISPATCH_API_BASE_URL/dispatch/pre`를 호출합니다.
