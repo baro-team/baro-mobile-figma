@@ -41,11 +41,14 @@ export function MatchedPanel({
     >
       <RideSheetSection>
         <RideVehicleCard label="123가 1234" rounded="2xl" />
-        <div className="relative mt-4">
+        <div className="mt-4">
           <RideRouteSummary
             origin={origin}
             destination={destination}
           />
+        </div>
+
+        <div className="mt-4">
           <RideFareSummary formattedEstimatedCost={formattedEstimatedCost} />
         </div>
       </RideSheetSection>
