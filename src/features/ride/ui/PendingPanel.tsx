@@ -1,6 +1,7 @@
 import { Car } from "lucide-react";
 import { RideRouteSummary } from "./RideRouteSummary";
 import { RideSheetActions } from "./RideSheetActions";
+import { RideSheetPanel } from "./RideSheetPanel";
 import { RideSheetSection } from "./RideSheetSection";
 
 type PendingPanelProps = {
@@ -17,7 +18,18 @@ export function PendingPanel({
   onCancelRide,
 }: PendingPanelProps) {
   return (
-    <>
+    <RideSheetPanel
+      actions={
+        <RideSheetActions>
+          <button
+            onClick={onCancelRide}
+            className="type-title ds-button-secondary w-full"
+          >
+            취소
+          </button>
+        </RideSheetActions>
+      }
+    >
       <RideSheetSection>
         <RideRouteSummary
           origin={origin}
@@ -51,15 +63,6 @@ export function PendingPanel({
           </div>
         </div>
       </RideSheetSection>
-
-      <RideSheetActions>
-        <button
-          onClick={onCancelRide}
-          className="type-title ds-button-secondary w-full"
-        >
-          취소
-        </button>
-      </RideSheetActions>
-    </>
+    </RideSheetPanel>
   );
 }
