@@ -1,0 +1,45 @@
+function normalizeBaseUrl(baseUrl: string) {
+  return baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+}
+
+export default async function handler(req: any, res: any) {
+  if (req.method !== "POST") {
+    res.status(405).json({ message: "Method Not Allowed" });
+    return;
+  }
+
+  const dispatchBaseUrl = process.env.DISPATCH_BASE_URL;
+
+  if (!dispatchBaseUrl) {
+    res.status(500).json({ message: "DISPATCH_BASE_URL이 설정되지 않았습니다." });
+    return;
+  }
+
+  const targetUrl = `${normalizeBaseUrl(dispatchBaseUrl)}/dispatch/pre`;
+
+  try {
+    const upstreamResponse = await fetch(targetUrl, {
+      method: "POST",
+      headers: {
+        Accept: "*/*",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(req.body),
+    });
+
+    const responseText = await upstreamResponse.text();
+    const contentType =
+      upstreamResponse.headers.get("content-type") ?? "application/json";
+
+    res.status(upstreamResponse.status);
+    res.setHeader("Content-Type", contentType);
+    res.send(responseText);
+  } catch (error) {
+    res.status(502).json({
+      message:
+        error instanceof Error
+          ? error.message
+          : "사전 배차 프록시 호출 중 오류가 발생했습니다.",
+    });
+  }
+}
