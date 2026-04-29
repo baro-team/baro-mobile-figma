@@ -13,6 +13,7 @@ declare global {
         };
         Polyline: new (options: unknown) => {
           setMap: (map: unknown | null) => void;
+          setPath: (path: unknown[]) => void;
         };
         CustomOverlay: new (options: unknown) => {
           setMap: (map: unknown | null) => void;
