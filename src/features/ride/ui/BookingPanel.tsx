@@ -202,7 +202,7 @@ export function BookingPanel({
         </RideSheetSection>
 
         {shouldShowPreviewSection ? (
-          <div>
+          <div className="mt-6">
             {isPreDispatchLoading ? (
               <div className="ds-route-surface px-4 py-4">
                 <p className="type-label ds-text-secondary">
