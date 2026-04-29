@@ -6,9 +6,11 @@ export { RideCompletedOverlay } from "./ui/RideCompletedOverlay";
 export type { RideEvent, RideState } from "./model/ride-machine";
 export type {
   PlaceSearchResult,
+  RideLocation,
+  RoutePoint,
+} from "./model/ride-location";
+export type {
   PreDispatchPreview,
   PreDispatchRequest,
   PreDispatchResponse,
-  RideLocation,
-  RoutePoint,
-} from "./model/ride-types";
+} from "./model/pre-dispatch-types";
