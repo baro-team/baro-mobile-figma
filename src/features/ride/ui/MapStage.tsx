@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Navigation } from "lucide-react";
 import { loadKakaoMapSdk } from "../lib/kakao-map-sdk";
 import { RideState } from "../model/ride-machine";
-import { RideLocation, RoutePoint } from "../model/ride-types";
+import { RideLocation, RoutePoint } from "../model/ride-location";
 
 type MapStageProps = {
   origin: string;

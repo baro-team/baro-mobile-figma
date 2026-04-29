@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { BookingPanel } from "./BookingPanel";
-import { PlaceSearchResult, PreDispatchPreview, RideLocation } from "../model/ride-types";
+import { PreDispatchPreview } from "../model/pre-dispatch-types";
+import { PlaceSearchResult, RideLocation } from "../model/ride-location";
 import { MatchedPanel } from "./MatchedPanel";
 import { PendingPanel } from "./PendingPanel";
 import { RideState } from "../model/ride-machine";

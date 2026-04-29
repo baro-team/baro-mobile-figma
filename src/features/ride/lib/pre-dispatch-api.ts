@@ -2,7 +2,7 @@ import {
   PreDispatchPreview,
   PreDispatchRequest,
   PreDispatchResponse,
-} from "../model/ride-types";
+} from "../model/pre-dispatch-types";
 
 export async function requestPreDispatch(
   payload: PreDispatchRequest,
