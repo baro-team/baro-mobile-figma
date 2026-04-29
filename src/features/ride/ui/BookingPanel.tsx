@@ -1,5 +1,6 @@
 import { FormEvent } from "react";
-import { PlaceSearchResult, PreDispatchPreview, RideLocation } from "../model/ride-types";
+import { PreDispatchPreview } from "../model/pre-dispatch-types";
+import { PlaceSearchResult, RideLocation } from "../model/ride-location";
 import { RideSheetActions } from "./RideSheetActions";
 import { RideSheetPanel } from "./RideSheetPanel";
 import { RideSheetSection } from "./RideSheetSection";

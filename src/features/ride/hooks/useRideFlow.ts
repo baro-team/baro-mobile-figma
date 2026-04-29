@@ -2,11 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { searchPlacesByKeyword } from "../lib/place-search-api";
 import { requestPreDispatch } from "../lib/pre-dispatch-api";
 import { RideState, transitionRideState } from "../model/ride-machine";
-import {
-  PlaceSearchResult,
-  PreDispatchPreview,
-  RideLocation,
-} from "../model/ride-types";
+import { PreDispatchPreview } from "../model/pre-dispatch-types";
+import { PlaceSearchResult, RideLocation } from "../model/ride-location";
 
 type TimerId = ReturnType<typeof setTimeout>;
 

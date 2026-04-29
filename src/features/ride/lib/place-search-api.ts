@@ -1,5 +1,5 @@
 import { loadKakaoMapSdk } from "./kakao-map-sdk";
-import { PlaceSearchResult } from "../model/ride-types";
+import { PlaceSearchResult } from "../model/ride-location";
 
 type KakaoKeywordSearchResult = {
   x: string;
