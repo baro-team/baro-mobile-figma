@@ -133,26 +133,30 @@ function FallbackMapStage({
       {origin && destination && routePolylinePoints ? (
         <svg
           key={pathSignature}
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
           className="absolute inset-0 w-full h-full pointer-events-none"
         >
           <polyline
             points={routePolylinePoints}
             pathLength={1}
-            stroke="rgba(3, 2, 19, 0.14)"
-            strokeWidth="7"
+            stroke="rgba(3, 2, 19, 0.18)"
+            strokeWidth="9"
             fill="none"
             strokeLinejoin="round"
             strokeLinecap="round"
+            vectorEffect="non-scaling-stroke"
             className="ds-route-draw"
           />
           <polyline
             points={routePolylinePoints}
             pathLength={1}
             stroke="url(#routeGradient)"
-            strokeWidth="3"
+            strokeWidth="5"
             fill="none"
             strokeLinejoin="round"
             strokeLinecap="round"
+            vectorEffect="non-scaling-stroke"
             className="ds-route-draw"
           />
           <defs>
@@ -296,9 +300,15 @@ export function MapStage(props: MapStageProps) {
     routeLatLngs.forEach((latLng) => bounds.extend(latLng));
 
     if (routeLatLngs.length > 1) {
+      const prefersReducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      const initialRoutePath = prefersReducedMotion
+        ? routeLatLngs
+        : routeLatLngs.slice(0, 2);
       const polylineStroke = new kakao.maps.Polyline({
         map,
-        path: routeLatLngs.slice(0, 2),
+        path: initialRoutePath,
         strokeWeight: 9,
         strokeColor: "rgba(3, 2, 19, 0.18)",
         strokeOpacity: 1,
@@ -306,7 +316,7 @@ export function MapStage(props: MapStageProps) {
       });
       const polyline = new kakao.maps.Polyline({
         map,
-        path: routeLatLngs.slice(0, 2),
+        path: initialRoutePath,
         strokeWeight: 5,
         strokeColor: "#22d3ee",
         strokeOpacity: 0.92,
@@ -314,23 +324,35 @@ export function MapStage(props: MapStageProps) {
       });
       overlays.push(polylineStroke, polyline);
 
-      const animationStartedAt = performance.now();
-      const drawRoute = (frameTime: number) => {
-        const visiblePointCount = getVisibleRoutePointCount(
-          frameTime - animationStartedAt,
-          routeLatLngs.length,
-        );
-        const visiblePath = routeLatLngs.slice(0, visiblePointCount);
+      if (!prefersReducedMotion) {
+        let animationStartedAt: number | null = null;
+        let lastVisiblePointCount = initialRoutePath.length;
 
-        polylineStroke.setPath(visiblePath);
-        polyline.setPath(visiblePath);
+        const drawRoute = (frameTime: number) => {
+          if (animationStartedAt === null) {
+            animationStartedAt = frameTime;
+          }
 
-        if (visiblePointCount < routeLatLngs.length) {
-          routeAnimationFrameId = requestAnimationFrame(drawRoute);
-        }
-      };
+          const visiblePointCount = getVisibleRoutePointCount(
+            frameTime - animationStartedAt,
+            routeLatLngs.length,
+          );
 
-      routeAnimationFrameId = requestAnimationFrame(drawRoute);
+          if (visiblePointCount !== lastVisiblePointCount) {
+            const visiblePath = routeLatLngs.slice(0, visiblePointCount);
+
+            polylineStroke.setPath(visiblePath);
+            polyline.setPath(visiblePath);
+            lastVisiblePointCount = visiblePointCount;
+          }
+
+          if (visiblePointCount < routeLatLngs.length) {
+            routeAnimationFrameId = requestAnimationFrame(drawRoute);
+          }
+        };
+
+        routeAnimationFrameId = requestAnimationFrame(drawRoute);
+      }
     }
 
     if (originLatLng) {

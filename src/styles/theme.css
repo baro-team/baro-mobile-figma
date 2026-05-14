@@ -463,7 +463,14 @@
   .ds-route-draw {
     stroke-dasharray: 1;
     stroke-dashoffset: 1;
-    animation: route-draw 1400ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: route-draw 1400ms cubic-bezier(0.33, 1, 0.67, 1) forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ds-route-draw {
+      animation: none;
+      stroke-dashoffset: 0;
+    }
   }
 }
 
