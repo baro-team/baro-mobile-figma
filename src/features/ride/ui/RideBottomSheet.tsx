@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { BookingPanel } from "./BookingPanel";
 import { PreDispatchPreview } from "../model/pre-dispatch-types";
@@ -35,6 +35,8 @@ type RideBottomSheetProps = {
   onRequestRide: () => void;
   onCancelRide: () => void;
 };
+
+const COLLAPSED_HEIGHT = 110;
 
 export function RideBottomSheet({
   rideState,
@@ -77,10 +79,11 @@ export function RideBottomSheet({
   const contentPaddingBottom = isKeyboardOpen
     ? "1.5rem"
     : "calc(1.5rem + var(--safe-area-bottom))";
-  const collapsedHeight = 110;
-
-  const clampHeight = (nextHeight: number, nextExpandedHeight = expandedHeight) =>
-    Math.min(Math.max(nextHeight, collapsedHeight), nextExpandedHeight);
+  const clampHeight = useCallback(
+    (nextHeight: number, nextExpandedHeight = expandedHeight) =>
+      Math.min(Math.max(nextHeight, COLLAPSED_HEIGHT), nextExpandedHeight),
+    [expandedHeight],
+  );
 
   const renderPanel = () => {
     switch (rideState) {
@@ -147,7 +150,7 @@ export function RideBottomSheet({
 
     const nextExpandedHeight = Math.max(
       contentRef.current.scrollHeight + 28,
-      collapsedHeight,
+      COLLAPSED_HEIGHT,
     );
 
     setExpandedHeight(nextExpandedHeight);
@@ -159,7 +162,7 @@ export function RideBottomSheet({
       return clampHeight(currentHeight, nextExpandedHeight);
     });
   }, [
-    collapsedHeight,
+    clampHeight,
     destination,
     estimatedCost,
     expandedHeight,
@@ -197,9 +200,9 @@ export function RideBottomSheet({
     };
 
     const handlePointerUp = () => {
-      const midpoint = (expandedHeight + collapsedHeight) / 2;
+      const midpoint = (expandedHeight + COLLAPSED_HEIGHT) / 2;
       setSheetHeight((currentHeight) =>
-        currentHeight < midpoint ? collapsedHeight : expandedHeight,
+        currentHeight < midpoint ? COLLAPSED_HEIGHT : expandedHeight,
       );
       dragStateRef.current = null;
       setIsDragging(false);
@@ -212,7 +215,7 @@ export function RideBottomSheet({
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
     };
-  }, [collapsedHeight, expandedHeight, isDragging]);
+  }, [clampHeight, expandedHeight, isDragging]);
 
   const handleDragStart = (event: React.PointerEvent<HTMLButtonElement>) => {
     dragStateRef.current = {
@@ -224,7 +227,7 @@ export function RideBottomSheet({
 
   return (
     <motion.div
-      animate={{ height: sheetHeight || expandedHeight || collapsedHeight }}
+      animate={{ height: sheetHeight || expandedHeight || COLLAPSED_HEIGHT }}
       transition={isDragging ? { duration: 0 } : { type: "spring", damping: 28, stiffness: 260 }}
       className="ds-sheet-panel w-full max-w-md mx-auto relative flex shrink-0 flex-col overflow-hidden"
     >
