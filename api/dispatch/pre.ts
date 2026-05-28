@@ -14,6 +14,18 @@ function normalizeBaseUrl(baseUrl: string) {
   return baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
 }
 
+function serializeRequestBody(body: unknown) {
+  if (typeof body === "string") {
+    return body;
+  }
+
+  if (body instanceof Uint8Array) {
+    return new TextDecoder().decode(body);
+  }
+
+  return JSON.stringify(body);
+}
+
 export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (req.method !== "POST") {
     res.status(405).json({ message: "Method Not Allowed" });
@@ -36,7 +48,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         Accept: "*/*",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(req.body),
+      body: serializeRequestBody(req.body),
     });
 
     const responseText = await upstreamResponse.text();
