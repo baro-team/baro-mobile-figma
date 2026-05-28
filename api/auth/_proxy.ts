@@ -1,8 +1,24 @@
+export type ApiRequest = {
+  method?: string;
+  body?: unknown;
+};
+
+export type ApiResponse = {
+  status: (statusCode: number) => ApiResponse;
+  setHeader: (name: string, value: string) => void;
+  json: (body: unknown) => void;
+  send: (body: string) => void;
+};
+
 function normalizeBaseUrl(baseUrl: string) {
   return baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
 }
 
-export async function forwardAuthRequest(req: any, res: any, authPath: string) {
+export async function forwardAuthRequest(
+  req: ApiRequest,
+  res: ApiResponse,
+  authPath: string,
+) {
   if (req.method !== "POST") {
     res.status(405).json({ message: "Method Not Allowed" });
     return;

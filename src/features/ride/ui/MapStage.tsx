@@ -230,8 +230,6 @@ function FallbackMarker({
 
 export function MapStage(props: MapStageProps) {
   const {
-    origin,
-    destination,
     originLocation,
     destinationLocation,
     routePath,
