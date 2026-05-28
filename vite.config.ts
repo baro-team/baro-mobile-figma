@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => {
   const dispatchApiBaseUrl = env.VITE_DISPATCH_API_BASE_URL
   const authApiBaseUrl =
     env.VITE_AUTH_API_BASE_URL ||
-    'http://baro-dev-1701378146.ap-northeast-2.elb.amazonaws.com'
+    'http://localhost:8080'
   const proxy = {
     '/api/auth': {
       target: authApiBaseUrl,

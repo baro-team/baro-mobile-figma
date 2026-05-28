@@ -9,9 +9,14 @@ export async function forwardAuthRequest(req: any, res: any, authPath: string) {
   }
 
   const authBaseUrl =
-    process.env.AUTH_BASE_URL ||
-    process.env.VITE_AUTH_API_BASE_URL ||
-    "http://baro-dev-1701378146.ap-northeast-2.elb.amazonaws.com";
+    process.env.AUTH_BASE_URL || process.env.VITE_AUTH_API_BASE_URL;
+
+  if (!authBaseUrl) {
+    res
+      .status(500)
+      .json({ message: "인증 API 베이스 URL 환경 변수가 설정되지 않았습니다." });
+    return;
+  }
 
   const targetUrl = `${normalizeBaseUrl(authBaseUrl)}${authPath}`;
 

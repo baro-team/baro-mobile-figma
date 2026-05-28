@@ -1,13 +1,13 @@
 import { FormEvent } from "react";
-import { Button } from "../../../app/components/ui/button";
+import { Button } from "@/app/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../../app/components/ui/card";
-import { Input } from "../../../app/components/ui/input";
+} from "@/app/components/ui/card";
+import { Input } from "@/app/components/ui/input";
 import { AuthCredentials, AuthMode } from "../model/auth-types";
 
 type AuthFormProps = {

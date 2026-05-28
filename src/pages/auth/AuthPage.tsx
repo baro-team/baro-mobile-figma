@@ -1,6 +1,6 @@
 import { FormEvent } from "react";
 import { AuthForm } from "../../features/auth";
-import { AuthCredentials, AuthMode } from "../../features/auth/model/auth-types";
+import type { AuthCredentials, AuthMode } from "../../features/auth";
 
 type AuthPageProps = {
   mode: AuthMode;
