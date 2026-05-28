@@ -17,14 +17,26 @@ function getFallbackErrorMessage(mode: AuthMode) {
 
 function normalizeAuthSession(response: AuthApiResponse): AuthSession {
   if (!response.success || !response.data) {
-    throw new Error(response.message || "인증 응답을 확인할 수 없습니다.");
+    throw new Error(
+      response.error?.message ||
+        response.message ||
+        "인증 응답을 확인할 수 없습니다.",
+    );
+  }
+
+  const userId = response.data.userId ?? response.data.user_id;
+  const accessToken = response.data.accessToken ?? response.data.access_token;
+  const refreshToken = response.data.refreshToken ?? response.data.refresh_token;
+
+  if (!userId || !accessToken || !refreshToken) {
+    throw new Error("인증 응답 형식이 올바르지 않습니다.");
   }
 
   return {
-    userId: response.data.user_id,
+    userId,
     email: response.data.email,
-    accessToken: response.data.access_token,
-    refreshToken: response.data.refresh_token,
+    accessToken,
+    refreshToken,
   };
 }
 
@@ -50,7 +62,9 @@ export async function submitAuth(
   }
 
   if (!response.ok) {
-    throw new Error(data?.message || getFallbackErrorMessage(mode));
+    throw new Error(
+      data?.error?.message || data?.message || getFallbackErrorMessage(mode),
+    );
   }
 
   if (!data) {

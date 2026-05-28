@@ -18,10 +18,17 @@ export type AuthSession = AuthUser & {
 export type AuthApiResponse = {
   success: boolean;
   data?: {
-    user_id: number;
+    user_id?: number;
+    userId?: number;
     email: string;
-    access_token: string;
-    refresh_token: string;
+    access_token?: string;
+    accessToken?: string;
+    refresh_token?: string;
+    refreshToken?: string;
+  };
+  error?: {
+    code: string;
+    message: string;
   };
   message?: string;
 };
