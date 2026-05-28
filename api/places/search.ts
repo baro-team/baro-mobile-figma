@@ -1,6 +1,6 @@
 type ApiRequest = {
   method?: string;
-  body?: unknown;
+  query?: Record<string, string | string[] | undefined>;
 };
 
 type ApiResponse = {
@@ -10,47 +10,45 @@ type ApiResponse = {
   send: (body: string) => void;
 };
 
-function normalizeBaseUrl(baseUrl: string) {
-  return baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
-}
-
-function serializeRequestBody(body: unknown) {
-  if (typeof body === "string") {
-    return body;
-  }
-
-  if (body instanceof Uint8Array) {
-    return new TextDecoder().decode(body);
-  }
-
-  return JSON.stringify(body);
+function getQueryValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
 }
 
 export default async function handler(req: ApiRequest, res: ApiResponse) {
-  if (req.method !== "POST") {
+  if (req.method !== "GET") {
     res.status(405).json({ message: "Method Not Allowed" });
     return;
   }
 
-  const authBaseUrl = process.env.AUTH_BASE_URL || process.env.BACKEND_BASE_URL;
+  const kakaoRestApiKey = process.env.KAKAO_REST_API_KEY;
 
-  if (!authBaseUrl) {
+  if (!kakaoRestApiKey) {
     res
       .status(500)
-      .json({ message: "AUTH_BASE_URL 또는 BACKEND_BASE_URL 환경 변수가 설정되지 않았습니다." });
+      .json({ message: "KAKAO_REST_API_KEY 환경 변수가 설정되지 않았습니다." });
     return;
   }
 
+  const query = getQueryValue(req.query?.query)?.trim();
+
+  if (!query) {
+    res.status(400).json({ message: "장소 검색어를 입력해주세요." });
+    return;
+  }
+
+  const searchParams = new URLSearchParams({
+    query,
+    size: getQueryValue(req.query?.size) ?? "5",
+  });
+
   try {
     const upstreamResponse = await fetch(
-      `${normalizeBaseUrl(authBaseUrl)}/auth/sign-up`,
+      `https://dapi.kakao.com/v2/local/search/keyword.json?${searchParams.toString()}`,
       {
-        method: "POST",
+        method: "GET",
         headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
+          Authorization: `KakaoAK ${kakaoRestApiKey}`,
         },
-        body: serializeRequestBody(req.body),
       },
     );
 
@@ -66,7 +64,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       message:
         error instanceof Error
           ? error.message
-          : "회원가입 프록시 호출 중 오류가 발생했습니다.",
+          : "장소 검색 프록시 호출 중 오류가 발생했습니다.",
     });
   }
 }

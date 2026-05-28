@@ -1,4 +1,3 @@
-import { loadKakaoMapSdk } from "./kakao-map-sdk";
 import { PlaceSearchResult } from "../model/ride-location";
 
 type KakaoKeywordSearchResult = {
@@ -7,6 +6,15 @@ type KakaoKeywordSearchResult = {
   place_name: string;
   address_name: string;
   road_address_name: string;
+};
+
+type KakaoKeywordSearchResponse = {
+  documents: KakaoKeywordSearchResult[];
+};
+
+type PlaceSearchErrorResponse = {
+  message?: string;
+  errorType?: string;
 };
 
 function normalizePlaceResult(place: KakaoKeywordSearchResult): PlaceSearchResult {
@@ -28,23 +36,33 @@ export async function searchPlacesByKeyword(
     throw new Error("장소 검색어를 입력해주세요.");
   }
 
-  const kakao = await loadKakaoMapSdk();
+  const response = await fetch(
+    `/api/places/search?query=${encodeURIComponent(trimmedKeyword)}&size=5`,
+    {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+    },
+  );
 
-  return new Promise((resolve, reject) => {
-    const places = new kakao.maps.services.Places();
+  if (!response.ok) {
+    let errorData: PlaceSearchErrorResponse | null = null;
 
-    places.keywordSearch(trimmedKeyword, (result, status) => {
-      if (status === kakao.maps.services.Status.OK && result.length > 0) {
-        resolve(result.slice(0, 5).map(normalizePlaceResult));
-        return;
-      }
+    try {
+      errorData = (await response.json()) as PlaceSearchErrorResponse;
+    } catch {
+      errorData = null;
+    }
 
-      if (status === kakao.maps.services.Status.ZERO_RESULT) {
-        reject(new Error(`'${trimmedKeyword}' 검색 결과가 없습니다.`));
-        return;
-      }
+    throw new Error(errorData?.message || "장소 검색 중 오류가 발생했습니다.");
+  }
 
-      reject(new Error("장소 검색 중 오류가 발생했습니다."));
-    });
-  });
+  const data = (await response.json()) as KakaoKeywordSearchResponse;
+
+  if (!data.documents.length) {
+    throw new Error(`'${trimmedKeyword}' 검색 결과가 없습니다.`);
+  }
+
+  return data.documents.map(normalizePlaceResult);
 }

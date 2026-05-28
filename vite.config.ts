@@ -1,4 +1,5 @@
 import { defineConfig, loadEnv } from 'vite'
+import type { ProxyOptions } from 'vite'
 import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
@@ -18,15 +19,31 @@ function figmaAssetResolver() {
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const dispatchApiBaseUrl = env.VITE_DISPATCH_API_BASE_URL
+  const backendApiBaseUrl = env.VITE_BACKEND_API_BASE_URL
+  const dispatchApiBaseUrl = env.VITE_DISPATCH_API_BASE_URL || backendApiBaseUrl
   const authApiBaseUrl =
     env.VITE_AUTH_API_BASE_URL ||
+    backendApiBaseUrl ||
     'http://localhost:8080'
-  const proxy = {
+  const kakaoRestApiKey = env.KAKAO_REST_API_KEY
+  const proxy: Record<string, ProxyOptions> = {
     '/api/auth': {
       target: authApiBaseUrl,
       changeOrigin: true,
       rewrite: (requestPath: string) => requestPath.replace(/^\/api/, ''),
+    },
+    '/api/places/search': {
+      target: 'https://dapi.kakao.com',
+      changeOrigin: true,
+      rewrite: (requestPath: string) =>
+        requestPath.replace(/^\/api\/places\/search/, '/v2/local/search/keyword.json'),
+      configure: (proxyServer) => {
+        proxyServer.on('proxyReq', (proxyRequest) => {
+          if (kakaoRestApiKey) {
+            proxyRequest.setHeader('Authorization', `KakaoAK ${kakaoRestApiKey}`)
+          }
+        })
+      },
     },
     ...(dispatchApiBaseUrl
       ? {

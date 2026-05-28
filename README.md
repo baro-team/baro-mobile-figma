@@ -59,8 +59,8 @@ pnpm run dev
 
 ```bash
 VITE_KAKAO_MAP_APP_KEY=your_kakao_javascript_key
-VITE_DISPATCH_API_BASE_URL=http://localhost:8082
-VITE_AUTH_API_BASE_URL=http://localhost:8080
+KAKAO_REST_API_KEY=your_kakao_rest_api_key
+VITE_BACKEND_API_BASE_URL=http://baro-dev-1701378146.ap-northeast-2.elb.amazonaws.com
 ```
 
 ### 환경 변수
@@ -72,20 +72,43 @@ Vercel에는 서버리스 프록시에서 사용할 백엔드 베이스 URL을 �
 ```bash
 AUTH_BASE_URL=http://baro-dev-1701378146.ap-northeast-2.elb.amazonaws.com
 DISPATCH_BASE_URL=배차_백엔드_URL
+KAKAO_REST_API_KEY=카카오_REST_API_키
+VITE_KAKAO_MAP_APP_KEY=카카오_JavaScript_키
+```
+
+인증/배차 백엔드 베이스 URL이 같다면 아래처럼 공통 변수 하나로도 설정할 수 있습니다.
+
+```bash
+BACKEND_BASE_URL=http://baro-dev-1701378146.ap-northeast-2.elb.amazonaws.com
+KAKAO_REST_API_KEY=카카오_REST_API_키
+VITE_KAKAO_MAP_APP_KEY=카카오_JavaScript_키
 ```
 
 - `AUTH_BASE_URL`: Vercel의 `api/auth/*` 함수가 회원가입/로그인 백엔드로 요청을 전달할 때 사용합니다.
 - `DISPATCH_BASE_URL`: Vercel의 `api/dispatch/pre.ts` 함수가 배차 백엔드로 요청을 전달할 때 사용합니다.
+- `BACKEND_BASE_URL`: 인증/배차 백엔드가 같을 때 `AUTH_BASE_URL`, `DISPATCH_BASE_URL` 대신 사용할 수 있는 공통 베이스 URL입니다.
+- `KAKAO_REST_API_KEY`: Vercel의 `api/places/search.ts` 함수가 카카오 Local REST API로 장소 검색을 요청할 때 사용합니다.
+- `VITE_KAKAO_MAP_APP_KEY`: 브라우저에서 카카오맵 JavaScript SDK로 지도 렌더링을 할 때 사용합니다.
 
 로컬 개발에서는 Vite dev proxy용 `VITE_*` 변수를 `.env.local`에 설정합니다.
 
 ```bash
 VITE_AUTH_API_BASE_URL=http://localhost:8080
 VITE_DISPATCH_API_BASE_URL=http://localhost:8082
+KAKAO_REST_API_KEY=카카오_REST_API_키
+```
+
+인증/배차 백엔드 베이스 URL이 같다면 로컬에서도 공통 변수 하나만 설정하면 됩니다.
+
+```bash
+VITE_BACKEND_API_BASE_URL=http://baro-dev-1701378146.ap-northeast-2.elb.amazonaws.com
+KAKAO_REST_API_KEY=카카오_REST_API_키
 ```
 
 - `VITE_AUTH_API_BASE_URL`: 로컬 개발 서버에서 `/api/auth/*` 요청을 인증 백엔드로 프록시할 때 사용합니다.
 - `VITE_DISPATCH_API_BASE_URL`: 로컬 개발 서버에서 `/api/dispatch/*` 요청을 배차 백엔드로 프록시할 때 사용합니다.
+- `VITE_BACKEND_API_BASE_URL`: 인증/배차 백엔드가 같을 때 `VITE_AUTH_API_BASE_URL`, `VITE_DISPATCH_API_BASE_URL` 대신 사용할 수 있는 공통 베이스 URL입니다.
+- `KAKAO_REST_API_KEY`: 로컬 개발 서버에서 `/api/places/search` 요청을 카카오 Local REST API로 프록시할 때 사용합니다.
 - `VITE_*` 변수는 브라우저 번들에 노출될 수 있으므로, Vercel 서버리스 함수에서만 필요한 값은 `AUTH_BASE_URL`, `DISPATCH_BASE_URL`처럼 `VITE_` 없이 관리합니다.
 
 ### 3. 프로덕션 빌드

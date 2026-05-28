@@ -39,10 +39,13 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return;
   }
 
-  const dispatchBaseUrl = process.env.DISPATCH_BASE_URL;
+  const dispatchBaseUrl =
+    process.env.DISPATCH_BASE_URL || process.env.BACKEND_BASE_URL;
 
   if (!dispatchBaseUrl) {
-    res.status(500).json({ message: "DISPATCH_BASE_URL이 설정되지 않았습니다." });
+    res.status(500).json({
+      message: "DISPATCH_BASE_URL 또는 BACKEND_BASE_URL이 설정되지 않았습니다.",
+    });
     return;
   }
 
