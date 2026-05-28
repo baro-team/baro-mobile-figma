@@ -43,7 +43,9 @@ export function RideBookingPage({ session, onLogout }: RideBookingPageProps) {
     openDoor,
     resetToBooking,
     cancelRide,
-  } = useRideFlow();
+    isDispatchLoading,
+    dispatchError,
+  } = useRideFlow(session.userId, session.accessToken);
 
   return (
     <div
@@ -98,6 +100,8 @@ export function RideBookingPage({ session, onLogout }: RideBookingPageProps) {
           preDispatchPreview={preDispatchPreview}
           isPreDispatchLoading={isPreDispatchLoading}
           preDispatchError={preDispatchError}
+          isDispatchLoading={isDispatchLoading}
+          dispatchError={dispatchError}
           eta={eta}
           searchRadius={searchRadius}
           estimatedCost={estimatedCost}

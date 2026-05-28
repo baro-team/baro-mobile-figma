@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { requestDispatch } from "../lib/dispatch-api";
 import { searchPlacesByKeyword } from "../lib/place-search-api";
 import { requestPreDispatch } from "../lib/pre-dispatch-api";
 import { RideState, transitionRideState } from "../model/ride-machine";
-import { PreDispatchPreview } from "../model/pre-dispatch-types";
+import {
+  DispatchResult,
+  PreDispatchPreview,
+} from "../model/pre-dispatch-types";
 import { PlaceSearchResult, RideLocation } from "../model/ride-location";
 
 type TimerId = ReturnType<typeof setTimeout>;
 
-export function useRideFlow() {
+export function useRideFlow(userId: number, accessToken: string) {
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [selectedOrigin, setSelectedOrigin] = useState<RideLocation | null>(null);
@@ -30,6 +34,11 @@ export function useRideFlow() {
     useState<PreDispatchPreview | null>(null);
   const [isPreDispatchLoading, setIsPreDispatchLoading] = useState(false);
   const [preDispatchError, setPreDispatchError] = useState<string | null>(null);
+  const [dispatchResult, setDispatchResult] = useState<DispatchResult | null>(
+    null,
+  );
+  const [isDispatchLoading, setIsDispatchLoading] = useState(false);
+  const [dispatchError, setDispatchError] = useState<string | null>(null);
   const [estimatedCost, setEstimatedCost] = useState<number | null>(null);
   const [rideState, setRideState] = useState<RideState>("booking");
   const [eta, setEta] = useState(5);
@@ -49,30 +58,54 @@ export function useRideFlow() {
     return timer;
   }, []);
 
-  const requestRide = useCallback(() => {
+  const requestRide = useCallback(async () => {
     if (!selectedOrigin || !selectedDestination || !preDispatchPreview) {
       return;
     }
 
-    clearAllTimers();
+    try {
+      setIsDispatchLoading(true);
+      setDispatchError(null);
 
-    setEstimatedCost(preDispatchPreview.fare);
-    setEta(preDispatchPreview.estimatedTime);
-    setRideState((current) => transitionRideState(current, "REQUEST_RIDE"));
-    setSearchRadius(5);
+      const nextDispatchResult = await requestDispatch({
+        request_id: preDispatchPreview.requestId,
+        user_id: userId,
+      }, accessToken);
 
-    schedule(() => setSearchRadius(10), 1000);
-    schedule(() => setSearchRadius(20), 3000);
-    schedule(() => {
-      setRideState((current) => transitionRideState(current, "CAR_MATCHED"));
-    }, 4000);
-    schedule(() => setShowCarOverlay(true), 8000);
+      setDispatchResult(nextDispatchResult);
+
+      clearAllTimers();
+
+      setEstimatedCost(nextDispatchResult.fare);
+      setEta(
+        nextDispatchResult.estimatedPickupTime ??
+          preDispatchPreview.estimatedTime,
+      );
+      setRideState((current) => transitionRideState(current, "REQUEST_RIDE"));
+      setSearchRadius(5);
+
+      schedule(() => setSearchRadius(10), 1000);
+      schedule(() => setSearchRadius(20), 3000);
+      schedule(() => {
+        setRideState((current) => transitionRideState(current, "CAR_MATCHED"));
+      }, 4000);
+      schedule(() => setShowCarOverlay(true), 8000);
+    } catch (error) {
+      setDispatchResult(null);
+      setDispatchError(
+        error instanceof Error ? error.message : "배차 요청에 실패했습니다.",
+      );
+    } finally {
+      setIsDispatchLoading(false);
+    }
   }, [
     clearAllTimers,
     preDispatchPreview,
     schedule,
     selectedDestination,
     selectedOrigin,
+    accessToken,
+    userId,
   ]);
 
   const requestPreDispatchPreview = useCallback(async () => {
@@ -85,10 +118,10 @@ export function useRideFlow() {
       setPreDispatchError(null);
 
       const preview = await requestPreDispatch({
-        user_id: 1001,
+        user_id: userId,
         origin: selectedOrigin,
         destination: selectedDestination,
-      });
+      }, accessToken);
 
       setPreDispatchPreview(preview);
     } catch (error) {
@@ -101,7 +134,7 @@ export function useRideFlow() {
     } finally {
       setIsPreDispatchLoading(false);
     }
-  }, [selectedDestination, selectedOrigin]);
+  }, [accessToken, selectedDestination, selectedOrigin, userId]);
 
   const handleOriginChange = useCallback((value: string) => {
     setOrigin(value);
@@ -111,6 +144,8 @@ export function useRideFlow() {
     setOriginSearchError(null);
     setPreDispatchPreview(null);
     setPreDispatchError(null);
+    setDispatchResult(null);
+    setDispatchError(null);
   }, []);
 
   const handleDestinationChange = useCallback((value: string) => {
@@ -121,6 +156,8 @@ export function useRideFlow() {
     setDestinationSearchError(null);
     setPreDispatchPreview(null);
     setPreDispatchError(null);
+    setDispatchResult(null);
+    setDispatchError(null);
   }, []);
 
   const selectOriginPlace = useCallback((place: PlaceSearchResult) => {
@@ -169,6 +206,8 @@ export function useRideFlow() {
     setDestinationSearchError(null);
     setPreDispatchPreview(null);
     setPreDispatchError(null);
+    setDispatchResult(null);
+    setDispatchError(null);
     setSearchRadius(5);
     setShowCarOverlay(false);
   }, [clearAllTimers]);
@@ -181,6 +220,8 @@ export function useRideFlow() {
     setPreDispatchPreview(null);
     setPreDispatchError(null);
     setIsPreDispatchLoading(false);
+    setDispatchResult(null);
+    setDispatchError(null);
   }, [selectedDestination, selectedOrigin]);
 
   useEffect(() => {
@@ -271,8 +312,11 @@ export function useRideFlow() {
     selectOriginPlace,
     selectDestinationPlace,
     preDispatchPreview,
+    dispatchResult,
     isPreDispatchLoading,
     preDispatchError,
+    isDispatchLoading,
+    dispatchError,
     requestPreDispatchPreview,
     estimatedCost,
     rideState,

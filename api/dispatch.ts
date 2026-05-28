@@ -46,7 +46,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return;
   }
 
-  const targetUrl = `${normalizeBaseUrl(dispatchBaseUrl)}/dispatch/pre`;
+  const targetUrl = `${normalizeBaseUrl(dispatchBaseUrl)}/dispatch`;
 
   try {
     const upstreamResponse = await fetch(targetUrl, {
@@ -73,7 +73,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       message:
         error instanceof Error
           ? error.message
-          : "사전 배차 프록시 호출 중 오류가 발생했습니다.",
+          : "배차 프록시 호출 중 오류가 발생했습니다.",
     });
   }
 }

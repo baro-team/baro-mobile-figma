@@ -19,6 +19,8 @@ type BookingPanelProps = {
   preDispatchPreview: PreDispatchPreview | null;
   isPreDispatchLoading: boolean;
   preDispatchError: string | null;
+  isDispatchLoading: boolean;
+  dispatchError: string | null;
   onOriginChange: (value: string) => void;
   onDestinationChange: (value: string) => void;
   onOriginSelect: (place: PlaceSearchResult) => void;
@@ -41,6 +43,8 @@ export function BookingPanel({
   preDispatchPreview,
   isPreDispatchLoading,
   preDispatchError,
+  isDispatchLoading,
+  dispatchError,
   onOriginChange,
   onDestinationChange,
   onOriginSelect,
@@ -48,7 +52,9 @@ export function BookingPanel({
   onRequestPreview,
   onRequestRide,
 }: BookingPanelProps) {
-  const canRequestRide = Boolean(selectedOrigin && selectedDestination);
+  const canRequestRide = Boolean(
+    selectedOrigin && selectedDestination && !isPreDispatchLoading && !isDispatchLoading,
+  );
   const shouldShowPreviewSection = Boolean(
     selectedOrigin && selectedDestination,
   );
@@ -78,7 +84,7 @@ export function BookingPanel({
       return;
     }
 
-    if (preDispatchPreview) {
+    if (preDispatchPreview && !isDispatchLoading) {
       onRequestRide();
       return;
     }
@@ -151,7 +157,11 @@ export function BookingPanel({
               disabled={!canRequestRide}
               className="type-button ds-button-primary w-full"
             >
-              {preDispatchPreview ? "배차 요청" : "예상 경로 보기"}
+              {isDispatchLoading
+                ? "배차 요청 중..."
+                : preDispatchPreview
+                  ? "배차 요청"
+                  : "예상 경로 보기"}
             </button>
           </RideSheetActions>
         }
@@ -215,6 +225,12 @@ export function BookingPanel({
             {!isPreDispatchLoading && preDispatchError ? (
               <div className="ds-route-surface px-4 py-4">
                 <p className="type-label text-red-500">{preDispatchError}</p>
+              </div>
+            ) : null}
+
+            {dispatchError ? (
+              <div className="ds-route-surface mt-3 px-4 py-4">
+                <p className="type-label text-red-500">{dispatchError}</p>
               </div>
             ) : null}
 
