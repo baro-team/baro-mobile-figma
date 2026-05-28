@@ -46,13 +46,30 @@ export async function requestPreDispatch(
     signal,
   });
 
-  if (!response.ok) {
-    throw new Error("사전 배차 예상 정보를 불러오지 못했습니다.");
+  let responseData: PreDispatchResponse | null = null;
+
+  try {
+    responseData = (await response.json()) as PreDispatchResponse;
+  } catch {
+    responseData = null;
   }
 
-  const data = unwrapPreDispatchResponse(
-    (await response.json()) as PreDispatchResponse,
-  );
+  if (!response.ok) {
+    const errorMessage =
+      responseData && isBaseResponse(responseData)
+        ? responseData.error?.message || responseData.message
+        : null;
+
+    throw new Error(
+      errorMessage || "사전 배차 예상 정보를 불러오지 못했습니다.",
+    );
+  }
+
+  if (!responseData) {
+    throw new Error("사전 배차 예상 응답을 확인할 수 없습니다.");
+  }
+
+  const data = unwrapPreDispatchResponse(responseData);
 
   const requestId = data.requestId ?? data.request_id;
   const routePath = data.routePath ?? data.route_path;
