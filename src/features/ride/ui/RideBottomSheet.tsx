@@ -23,6 +23,8 @@ type RideBottomSheetProps = {
   preDispatchPreview: PreDispatchPreview | null;
   isPreDispatchLoading: boolean;
   preDispatchError: string | null;
+  isDispatchLoading: boolean;
+  dispatchError: string | null;
   eta: number;
   searchRadius: number;
   estimatedCost: number | null;
@@ -53,6 +55,8 @@ export function RideBottomSheet({
   preDispatchPreview,
   isPreDispatchLoading,
   preDispatchError,
+  isDispatchLoading,
+  dispatchError,
   eta,
   searchRadius,
   estimatedCost,
@@ -103,6 +107,8 @@ export function RideBottomSheet({
             preDispatchPreview={preDispatchPreview}
             isPreDispatchLoading={isPreDispatchLoading}
             preDispatchError={preDispatchError}
+            isDispatchLoading={isDispatchLoading}
+            dispatchError={dispatchError}
             onOriginChange={onOriginChange}
             onDestinationChange={onDestinationChange}
             onOriginSelect={onOriginSelect}
@@ -170,6 +176,8 @@ export function RideBottomSheet({
     isKeyboardOpen,
     origin,
     preDispatchPreview,
+    isDispatchLoading,
+    dispatchError,
     rideState,
     searchRadius,
     selectedDestination,

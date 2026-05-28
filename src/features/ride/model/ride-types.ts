@@ -7,4 +7,7 @@ export type {
   PreDispatchPreview,
   PreDispatchRequest,
   PreDispatchResponse,
+  DispatchRequest,
+  DispatchResponse,
+  DispatchResult,
 } from "./pre-dispatch-types";
