@@ -60,7 +60,7 @@ export async function searchPlacesByKeyword(
 
   const data = (await response.json()) as KakaoKeywordSearchResponse;
 
-  if (!data.documents.length) {
+  if (!data || !Array.isArray(data.documents) || data.documents.length === 0) {
     throw new Error(`'${trimmedKeyword}' 검색 결과가 없습니다.`);
   }
 

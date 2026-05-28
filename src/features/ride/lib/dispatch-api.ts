@@ -1,13 +1,38 @@
 import {
+  BaseApiResponse,
   DispatchRequest,
   DispatchResponse,
+  DispatchResponseData,
   DispatchResult,
 } from "../model/pre-dispatch-types";
 
-function unwrapDispatchResponse(response: DispatchResponse): DispatchResult {
-  const data = "success" in response ? response.data : response;
+type ErrorResponse = {
+  message?: string;
+  error?: {
+    message?: string;
+  };
+};
 
-  if ("success" in response) {
+function getErrorMessage(response: unknown) {
+  if (!response || typeof response !== "object") {
+    return null;
+  }
+
+  const errorResponse = response as ErrorResponse;
+
+  return errorResponse.error?.message || errorResponse.message || null;
+}
+
+function isBaseDispatchResponse(
+  response: DispatchResponse,
+): response is BaseApiResponse<DispatchResponseData> {
+  return "success" in response;
+}
+
+function unwrapDispatchResponse(response: DispatchResponse): DispatchResult {
+  const isBaseResponse = isBaseDispatchResponse(response);
+
+  if (isBaseResponse) {
     if (!response.success || !response.data) {
       throw new Error(
         response.error?.message ||
@@ -15,8 +40,9 @@ function unwrapDispatchResponse(response: DispatchResponse): DispatchResult {
           "배차 요청 응답을 확인할 수 없습니다.",
       );
     }
-
   }
+
+  const data = isBaseResponse ? response.data : response;
 
   if (!data) {
     throw new Error("배차 요청 응답을 확인할 수 없습니다.");
@@ -40,6 +66,7 @@ function unwrapDispatchResponse(response: DispatchResponse): DispatchResult {
     requestId == null ||
     userId == null ||
     estimatedRideTime == null ||
+    data.fare == null ||
     !dispatchStatus
   ) {
     throw new Error("배차 요청 응답 형식이 올바르지 않습니다.");
@@ -74,7 +101,7 @@ export async function requestDispatch(
     body: JSON.stringify(payload),
   });
 
-  let data: DispatchResponse | null = null;
+  let data: DispatchResponse | ErrorResponse | null = null;
 
   try {
     data = (await response.json()) as DispatchResponse;
@@ -83,10 +110,7 @@ export async function requestDispatch(
   }
 
   if (!response.ok) {
-    const errorMessage =
-      data && typeof data === "object" && "success" in data
-        ? data.error?.message || data.message
-        : null;
+    const errorMessage = getErrorMessage(data);
 
     throw new Error(errorMessage || "배차 요청에 실패했습니다.");
   }
@@ -95,5 +119,5 @@ export async function requestDispatch(
     throw new Error("배차 요청 응답을 확인할 수 없습니다.");
   }
 
-  return unwrapDispatchResponse(data);
+  return unwrapDispatchResponse(data as DispatchResponse);
 }
