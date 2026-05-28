@@ -60,7 +60,33 @@ pnpm run dev
 ```bash
 VITE_KAKAO_MAP_APP_KEY=your_kakao_javascript_key
 VITE_DISPATCH_API_BASE_URL=http://localhost:8082
+VITE_AUTH_API_BASE_URL=http://localhost:8080
 ```
+
+### 환경 변수
+
+현재는 Preview/Production 등 별도 환경 구분 없이 동일한 값을 사용합니다.
+
+Vercel에는 서버리스 프록시에서 사용할 백엔드 베이스 URL을 설정합니다.
+
+```bash
+AUTH_BASE_URL=http://baro-dev-1701378146.ap-northeast-2.elb.amazonaws.com
+DISPATCH_BASE_URL=배차_백엔드_URL
+```
+
+- `AUTH_BASE_URL`: Vercel의 `api/auth/*` 함수가 회원가입/로그인 백엔드로 요청을 전달할 때 사용합니다.
+- `DISPATCH_BASE_URL`: Vercel의 `api/dispatch/pre.ts` 함수가 배차 백엔드로 요청을 전달할 때 사용합니다.
+
+로컬 개발에서는 Vite dev proxy용 `VITE_*` 변수를 `.env.local`에 설정합니다.
+
+```bash
+VITE_AUTH_API_BASE_URL=http://localhost:8080
+VITE_DISPATCH_API_BASE_URL=http://localhost:8082
+```
+
+- `VITE_AUTH_API_BASE_URL`: 로컬 개발 서버에서 `/api/auth/*` 요청을 인증 백엔드로 프록시할 때 사용합니다.
+- `VITE_DISPATCH_API_BASE_URL`: 로컬 개발 서버에서 `/api/dispatch/*` 요청을 배차 백엔드로 프록시할 때 사용합니다.
+- `VITE_*` 변수는 브라우저 번들에 노출될 수 있으므로, Vercel 서버리스 함수에서만 필요한 값은 `AUTH_BASE_URL`, `DISPATCH_BASE_URL`처럼 `VITE_` 없이 관리합니다.
 
 ### 3. 프로덕션 빌드
 
@@ -141,3 +167,6 @@ PR 생성 또는 갱신 시 GitHub Actions를 통해 Vercel Preview 배포를 �
 - 프런트는 `/api/dispatch/pre`만 호출합니다.
 - 로컬 개발에서는 `VITE_DISPATCH_API_BASE_URL`을 읽는 Vite proxy가 `/api/dispatch/*`를 실제 백엔드로 전달합니다.
 - Vercel 배포에서는 `api/dispatch/pre.ts` 함수가 `DISPATCH_BASE_URL/dispatch/pre`로 프록시합니다.
+- 프런트는 인증 요청도 `/api/auth/login`, `/api/auth/sign-up`으로 호출합니다.
+- 로컬 개발에서는 `VITE_AUTH_API_BASE_URL`을 읽는 Vite proxy가 `/api/auth/*`를 실제 백엔드로 전달합니다.
+- Vercel 배포에서는 `api/auth/*` 함수가 `AUTH_BASE_URL`로 프록시합니다.

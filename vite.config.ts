@@ -19,6 +19,25 @@ function figmaAssetResolver() {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const dispatchApiBaseUrl = env.VITE_DISPATCH_API_BASE_URL
+  const authApiBaseUrl =
+    env.VITE_AUTH_API_BASE_URL ||
+    'http://localhost:8080'
+  const proxy = {
+    '/api/auth': {
+      target: authApiBaseUrl,
+      changeOrigin: true,
+      rewrite: (requestPath: string) => requestPath.replace(/^\/api/, ''),
+    },
+    ...(dispatchApiBaseUrl
+      ? {
+          '/api/dispatch': {
+            target: dispatchApiBaseUrl,
+            changeOrigin: true,
+            rewrite: (requestPath: string) => requestPath.replace(/^\/api/, ''),
+          },
+        }
+      : {}),
+  }
 
   return {
     plugins: [
@@ -37,15 +56,7 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5173,
       strictPort: true,
-      proxy: dispatchApiBaseUrl
-        ? {
-            '/api/dispatch': {
-              target: dispatchApiBaseUrl,
-              changeOrigin: true,
-              rewrite: (requestPath) => requestPath.replace(/^\/api/, ''),
-            },
-          }
-        : undefined,
+      proxy,
     },
 
     // File types to support raw imports. Never add .css, .tsx, or .ts files to this.

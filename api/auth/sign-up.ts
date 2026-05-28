@@ -32,24 +32,27 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return;
   }
 
-  const dispatchBaseUrl = process.env.DISPATCH_BASE_URL;
+  const authBaseUrl = process.env.AUTH_BASE_URL;
 
-  if (!dispatchBaseUrl) {
-    res.status(500).json({ message: "DISPATCH_BASE_URL이 설정되지 않았습니다." });
+  if (!authBaseUrl) {
+    res
+      .status(500)
+      .json({ message: "AUTH_BASE_URL 환경 변수가 설정되지 않았습니다." });
     return;
   }
 
-  const targetUrl = `${normalizeBaseUrl(dispatchBaseUrl)}/dispatch/pre`;
-
   try {
-    const upstreamResponse = await fetch(targetUrl, {
-      method: "POST",
-      headers: {
-        Accept: "*/*",
-        "Content-Type": "application/json",
+    const upstreamResponse = await fetch(
+      `${normalizeBaseUrl(authBaseUrl)}/auth/sign-up`,
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: serializeRequestBody(req.body),
       },
-      body: serializeRequestBody(req.body),
-    });
+    );
 
     const responseText = await upstreamResponse.text();
     const contentType =
@@ -63,7 +66,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       message:
         error instanceof Error
           ? error.message
-          : "사전 배차 프록시 호출 중 오류가 발생했습니다.",
+          : "회원가입 프록시 호출 중 오류가 발생했습니다.",
     });
   }
 }
