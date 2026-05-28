@@ -81,7 +81,7 @@ export type DispatchResult = {
   userId: number;
   carId: number;
   standId: number;
-  estimatedPickupTime: number;
+  estimatedPickupTime?: number;
   estimatedRideTime: number;
   pickupRoutePath: RoutePoint[];
   dropoffRoutePath: RoutePoint[];

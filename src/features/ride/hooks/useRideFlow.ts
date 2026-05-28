@@ -77,7 +77,10 @@ export function useRideFlow(userId: number, accessToken: string) {
       clearAllTimers();
 
       setEstimatedCost(nextDispatchResult.fare);
-      setEta(nextDispatchResult.estimatedPickupTime || preDispatchPreview.estimatedTime);
+      setEta(
+        nextDispatchResult.estimatedPickupTime ??
+          preDispatchPreview.estimatedTime,
+      );
       setRideState((current) => transitionRideState(current, "REQUEST_RIDE"));
       setSearchRadius(5);
 

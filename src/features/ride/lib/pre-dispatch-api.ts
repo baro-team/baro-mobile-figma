@@ -59,7 +59,12 @@ export async function requestPreDispatch(
   const estimatedTime = data.estimatedTime ?? data.estimated_time;
   const distanceKm = data.distanceKm ?? data.distance_km;
 
-  if (!requestId || !routePath || !estimatedTime || distanceKm === undefined) {
+  if (
+    requestId == null ||
+    !routePath ||
+    estimatedTime == null ||
+    distanceKm == null
+  ) {
     throw new Error("사전 배차 예상 응답 형식이 올바르지 않습니다.");
   }
 
