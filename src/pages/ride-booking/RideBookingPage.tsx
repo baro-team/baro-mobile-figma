@@ -45,7 +45,7 @@ export function RideBookingPage({ session, onLogout }: RideBookingPageProps) {
     cancelRide,
     isDispatchLoading,
     dispatchError,
-  } = useRideFlow(session.userId, session.accessToken);
+  } = useRideFlow(session.accessToken);
 
   return (
     <div
