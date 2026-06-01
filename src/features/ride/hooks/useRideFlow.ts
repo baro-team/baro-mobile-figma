@@ -69,7 +69,6 @@ export function useRideFlow(userId: number, accessToken: string) {
 
       const nextDispatchResult = await requestDispatch({
         request_id: preDispatchPreview.requestId,
-        user_id: userId,
       }, accessToken);
 
       setDispatchResult(nextDispatchResult);
@@ -118,7 +117,6 @@ export function useRideFlow(userId: number, accessToken: string) {
       setPreDispatchError(null);
 
       const preview = await requestPreDispatch({
-        user_id: userId,
         origin: selectedOrigin,
         destination: selectedDestination,
       }, accessToken);

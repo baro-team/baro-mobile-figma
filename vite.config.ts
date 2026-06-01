@@ -20,17 +20,13 @@ function figmaAssetResolver() {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const backendApiBaseUrl = env.VITE_BACKEND_API_BASE_URL
-  const dispatchApiBaseUrl = env.VITE_DISPATCH_API_BASE_URL || backendApiBaseUrl
-  const authApiBaseUrl =
-    env.VITE_AUTH_API_BASE_URL ||
-    backendApiBaseUrl ||
-    'http://localhost:8080'
+  const backendApiTarget = backendApiBaseUrl || 'https://dev.barocloud.com'
   const kakaoRestApiKey = env.KAKAO_REST_API_KEY
   const proxy: Record<string, ProxyOptions> = {
     '/api/auth': {
-      target: authApiBaseUrl,
+      target: backendApiTarget,
       changeOrigin: true,
-      rewrite: (requestPath: string) => requestPath.replace(/^\/api/, ''),
+      rewrite: (requestPath: string) => requestPath.replace(/^\/api\/auth/, '/user/auth'),
     },
     '/api/places/search': {
       target: 'https://dapi.kakao.com',
@@ -45,15 +41,11 @@ export default defineConfig(({ mode }) => {
         })
       },
     },
-    ...(dispatchApiBaseUrl
-      ? {
-          '/api/dispatch': {
-            target: dispatchApiBaseUrl,
-            changeOrigin: true,
-            rewrite: (requestPath: string) => requestPath.replace(/^\/api/, ''),
-          },
-        }
-      : {}),
+    '/api/dispatch': {
+      target: backendApiTarget,
+      changeOrigin: true,
+      rewrite: (requestPath: string) => requestPath.replace(/^\/api/, ''),
+    },
   }
 
   return {

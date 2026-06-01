@@ -1,7 +1,6 @@
 import { RideLocation, RoutePoint } from "./ride-location";
 
 export type PreDispatchRequest = {
-  user_id: number;
   origin: RideLocation;
   destination: RideLocation;
 };
@@ -20,7 +19,6 @@ export type PreDispatchResponseData = {
 
 export type DispatchRequest = {
   request_id: number;
-  user_id: number;
 };
 
 export type DispatchResponseData = {

@@ -32,18 +32,18 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return;
   }
 
-  const authBaseUrl = process.env.AUTH_BASE_URL || process.env.BACKEND_BASE_URL;
+  const backendBaseUrl = process.env.BACKEND_BASE_URL;
 
-  if (!authBaseUrl) {
+  if (!backendBaseUrl) {
     res
       .status(500)
-      .json({ message: "AUTH_BASE_URL 또는 BACKEND_BASE_URL 환경 변수가 설정되지 않았습니다." });
+      .json({ message: "BACKEND_BASE_URL 환경 변수가 설정되지 않았습니다." });
     return;
   }
 
   try {
     const upstreamResponse = await fetch(
-      `${normalizeBaseUrl(authBaseUrl)}/auth/sign-up`,
+      `${normalizeBaseUrl(backendBaseUrl)}/user/auth/sign-up`,
       {
         method: "POST",
         headers: {

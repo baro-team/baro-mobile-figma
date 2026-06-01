@@ -60,56 +60,50 @@ pnpm run dev
 ```bash
 VITE_KAKAO_MAP_APP_KEY=your_kakao_javascript_key
 KAKAO_REST_API_KEY=your_kakao_rest_api_key
-VITE_BACKEND_API_BASE_URL=http://baro-dev-1701378146.ap-northeast-2.elb.amazonaws.com
+VITE_BACKEND_API_BASE_URL=https://dev.barocloud.com
 ```
 
 ### 환경 변수
 
 현재는 Preview/Production 등 별도 환경 구분 없이 동일한 값을 사용합니다.
 
+백엔드 Base URL은 `https://dev.barocloud.com` 하나이며, 기능별 경로는 서버리스 프록시와 Vite dev proxy에서 `/user`, `/dispatch`로 구분합니다.
+
 Vercel에는 서버리스 프록시에서 사용할 백엔드 베이스 URL을 설정합니다.
 
 ```bash
-AUTH_BASE_URL=http://baro-dev-1701378146.ap-northeast-2.elb.amazonaws.com
-DISPATCH_BASE_URL=배차_백엔드_URL
+BACKEND_BASE_URL=https://dev.barocloud.com
 KAKAO_REST_API_KEY=카카오_REST_API_키
 VITE_KAKAO_MAP_APP_KEY=카카오_JavaScript_키
 ```
 
-인증/배차 백엔드 베이스 URL이 같다면 아래처럼 공통 변수 하나로도 설정할 수 있습니다.
-
-```bash
-BACKEND_BASE_URL=http://baro-dev-1701378146.ap-northeast-2.elb.amazonaws.com
-KAKAO_REST_API_KEY=카카오_REST_API_키
-VITE_KAKAO_MAP_APP_KEY=카카오_JavaScript_키
-```
-
-- `AUTH_BASE_URL`: Vercel의 `api/auth/*` 함수가 회원가입/로그인 백엔드로 요청을 전달할 때 사용합니다.
-- `DISPATCH_BASE_URL`: Vercel의 `api/dispatch/pre.ts` 함수가 배차 백엔드로 요청을 전달할 때 사용합니다.
-- `BACKEND_BASE_URL`: 인증/배차 백엔드가 같을 때 `AUTH_BASE_URL`, `DISPATCH_BASE_URL` 대신 사용할 수 있는 공통 베이스 URL입니다.
+- `BACKEND_BASE_URL`: Vercel의 `api/auth/*`, `api/dispatch/*` 함수가 백엔드로 요청을 전달할 때 사용하는 공통 베이스 URL입니다.
 - `KAKAO_REST_API_KEY`: Vercel의 `api/places/search.ts` 함수가 카카오 Local REST API로 장소 검색을 요청할 때 사용합니다.
 - `VITE_KAKAO_MAP_APP_KEY`: 브라우저에서 카카오맵 JavaScript SDK로 지도 렌더링을 할 때 사용합니다.
 
 로컬 개발에서는 Vite dev proxy용 `VITE_*` 변수를 `.env.local`에 설정합니다.
 
 ```bash
-VITE_AUTH_API_BASE_URL=http://localhost:8080
-VITE_DISPATCH_API_BASE_URL=http://localhost:8082
+VITE_BACKEND_API_BASE_URL=https://dev.barocloud.com
 KAKAO_REST_API_KEY=카카오_REST_API_키
+VITE_KAKAO_MAP_APP_KEY=카카오_JavaScript_키
 ```
 
-인증/배차 백엔드 베이스 URL이 같다면 로컬에서도 공통 변수 하나만 설정하면 됩니다.
-
-```bash
-VITE_BACKEND_API_BASE_URL=http://baro-dev-1701378146.ap-northeast-2.elb.amazonaws.com
-KAKAO_REST_API_KEY=카카오_REST_API_키
-```
-
-- `VITE_AUTH_API_BASE_URL`: 로컬 개발 서버에서 `/api/auth/*` 요청을 인증 백엔드로 프록시할 때 사용합니다.
-- `VITE_DISPATCH_API_BASE_URL`: 로컬 개발 서버에서 `/api/dispatch/*` 요청을 배차 백엔드로 프록시할 때 사용합니다.
-- `VITE_BACKEND_API_BASE_URL`: 인증/배차 백엔드가 같을 때 `VITE_AUTH_API_BASE_URL`, `VITE_DISPATCH_API_BASE_URL` 대신 사용할 수 있는 공통 베이스 URL입니다.
+- `VITE_BACKEND_API_BASE_URL`: 로컬 개발 서버에서 `/api/auth/*`, `/api/dispatch/*` 요청을 백엔드로 프록시할 때 사용하는 공통 베이스 URL입니다.
 - `KAKAO_REST_API_KEY`: 로컬 개발 서버에서 `/api/places/search` 요청을 카카오 Local REST API로 프록시할 때 사용합니다.
-- `VITE_*` 변수는 브라우저 번들에 노출될 수 있으므로, Vercel 서버리스 함수에서만 필요한 값은 `AUTH_BASE_URL`, `DISPATCH_BASE_URL`처럼 `VITE_` 없이 관리합니다.
+- `VITE_*` 변수는 브라우저 번들에 노출될 수 있으므로, Vercel 서버리스 함수에서만 필요한 값은 `BACKEND_BASE_URL`처럼 `VITE_` 없이 관리합니다.
+
+현재 백엔드 엔드포인트는 아래와 같습니다.
+
+- User Swagger: `https://dev.barocloud.com/user/swagger-ui.html`
+- Dispatch Swagger: `https://dev.barocloud.com/dispatch/swagger-ui.html`
+- 회원가입: `POST https://dev.barocloud.com/user/auth/sign-up`
+- 로그인: `POST https://dev.barocloud.com/user/auth/login`
+- 토큰 갱신: `POST https://dev.barocloud.com/user/auth/token/refresh`
+- 로그아웃: `POST https://dev.barocloud.com/user/auth/logout`
+- 내 정보: `GET https://dev.barocloud.com/user/users/me`
+- 사전 배차: `POST https://dev.barocloud.com/dispatch/pre`
+- 배차: `POST https://dev.barocloud.com/dispatch`
 
 ### 3. 프로덕션 빌드
 
@@ -188,8 +182,8 @@ PR 생성 또는 갱신 시 GitHub Actions를 통해 Vercel Preview 배포를 �
 - 카카오맵을 실제로 띄우려면 카카오 개발자 콘솔에 로컬/배포 도메인을 등록해야 합니다.
 - 빌드 산출물 `dist/`와 의존성 디렉터리 `node_modules/`는 Git에 포함하지 않습니다.
 - 프런트는 `/api/dispatch/pre`만 호출합니다.
-- 로컬 개발에서는 `VITE_DISPATCH_API_BASE_URL`을 읽는 Vite proxy가 `/api/dispatch/*`를 실제 백엔드로 전달합니다.
-- Vercel 배포에서는 `api/dispatch/pre.ts` 함수가 `DISPATCH_BASE_URL/dispatch/pre`로 프록시합니다.
+- 로컬 개발에서는 `VITE_BACKEND_API_BASE_URL`을 읽는 Vite proxy가 `/api/dispatch/*`를 실제 백엔드의 `/dispatch/*`로 전달합니다.
+- Vercel 배포에서는 `api/dispatch/pre.ts` 함수가 `BACKEND_BASE_URL/dispatch/pre`로 프록시합니다.
 - 프런트는 인증 요청도 `/api/auth/login`, `/api/auth/sign-up`으로 호출합니다.
-- 로컬 개발에서는 `VITE_AUTH_API_BASE_URL`을 읽는 Vite proxy가 `/api/auth/*`를 실제 백엔드로 전달합니다.
-- Vercel 배포에서는 `api/auth/*` 함수가 `AUTH_BASE_URL`로 프록시합니다.
+- 로컬 개발에서는 `VITE_BACKEND_API_BASE_URL`을 읽는 Vite proxy가 `/api/auth/*`를 실제 백엔드의 `/user/auth/*`로 전달합니다.
+- Vercel 배포에서는 `api/auth/*` 함수가 `BACKEND_BASE_URL/user/auth/*`로 프록시합니다.
