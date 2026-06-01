@@ -5,23 +5,7 @@ import {
   PreDispatchResponse,
   PreDispatchResponseData,
 } from "../model/pre-dispatch-types";
-
-type ErrorResponse = {
-  message?: string;
-  error?: {
-    message?: string;
-  };
-};
-
-function getErrorMessage(response: unknown) {
-  if (!response || typeof response !== "object") {
-    return null;
-  }
-
-  const errorResponse = response as ErrorResponse;
-
-  return errorResponse.error?.message || errorResponse.message || null;
-}
+import { ErrorResponse, getErrorMessage } from "./api-error";
 
 function isBaseResponse(
   response: PreDispatchResponse,

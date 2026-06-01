@@ -11,7 +11,7 @@ import { PlaceSearchResult, RideLocation } from "../model/ride-location";
 
 type TimerId = ReturnType<typeof setTimeout>;
 
-export function useRideFlow(userId: number, accessToken: string) {
+export function useRideFlow(accessToken: string) {
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [selectedOrigin, setSelectedOrigin] = useState<RideLocation | null>(null);
@@ -104,7 +104,6 @@ export function useRideFlow(userId: number, accessToken: string) {
     selectedDestination,
     selectedOrigin,
     accessToken,
-    userId,
   ]);
 
   const requestPreDispatchPreview = useCallback(async () => {
@@ -132,7 +131,7 @@ export function useRideFlow(userId: number, accessToken: string) {
     } finally {
       setIsPreDispatchLoading(false);
     }
-  }, [accessToken, selectedDestination, selectedOrigin, userId]);
+  }, [accessToken, selectedDestination, selectedOrigin]);
 
   const handleOriginChange = useCallback((value: string) => {
     setOrigin(value);
