@@ -6,6 +6,23 @@ import {
   PreDispatchResponseData,
 } from "../model/pre-dispatch-types";
 
+type ErrorResponse = {
+  message?: string;
+  error?: {
+    message?: string;
+  };
+};
+
+function getErrorMessage(response: unknown) {
+  if (!response || typeof response !== "object") {
+    return null;
+  }
+
+  const errorResponse = response as ErrorResponse;
+
+  return errorResponse.error?.message || errorResponse.message || null;
+}
+
 function isBaseResponse(
   response: PreDispatchResponse,
 ): response is BaseApiResponse<PreDispatchResponseData> {
@@ -46,13 +63,27 @@ export async function requestPreDispatch(
     signal,
   });
 
-  if (!response.ok) {
-    throw new Error("사전 배차 예상 정보를 불러오지 못했습니다.");
+  let responseData: PreDispatchResponse | ErrorResponse | null = null;
+
+  try {
+    responseData = (await response.json()) as PreDispatchResponse;
+  } catch {
+    responseData = null;
   }
 
-  const data = unwrapPreDispatchResponse(
-    (await response.json()) as PreDispatchResponse,
-  );
+  if (!response.ok) {
+    const errorMessage = getErrorMessage(responseData);
+
+    throw new Error(
+      errorMessage || "사전 배차 예상 정보를 불러오지 못했습니다.",
+    );
+  }
+
+  if (!responseData) {
+    throw new Error("사전 배차 예상 응답을 확인할 수 없습니다.");
+  }
+
+  const data = unwrapPreDispatchResponse(responseData as PreDispatchResponse);
 
   const requestId = data.requestId ?? data.request_id;
   const routePath = data.routePath ?? data.route_path;
@@ -63,7 +94,8 @@ export async function requestPreDispatch(
     requestId == null ||
     !routePath ||
     estimatedTime == null ||
-    distanceKm == null
+    distanceKm == null ||
+    data.fare == null
   ) {
     throw new Error("사전 배차 예상 응답 형식이 올바르지 않습니다.");
   }
