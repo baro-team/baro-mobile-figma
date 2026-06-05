@@ -39,7 +39,7 @@ server {
   }
 
   location = /api/places/search {
-    proxy_pass https://dapi.kakao.com/v2/local/search/keyword.json$is_args$args;
+    proxy_pass https://dapi.kakao.com/v2/local/search/keyword.json;
     proxy_set_header Host dapi.kakao.com;
     proxy_set_header Authorization "KakaoAK ${KAKAO_REST_API_KEY}";
   }
