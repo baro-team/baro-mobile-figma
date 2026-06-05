@@ -1,0 +1,50 @@
+server {
+  listen 80;
+  server_name _;
+
+  root /usr/share/nginx/html;
+  index index.html;
+
+  location = /health {
+    access_log off;
+    return 200 "ok\n";
+  }
+
+  location = /api/auth {
+    proxy_pass ${BACKEND_API_BASE_URL}/user/auth;
+    proxy_set_header Host $proxy_host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+
+  location /api/auth/ {
+    proxy_pass ${BACKEND_API_BASE_URL}/user/auth/;
+    proxy_set_header Host $proxy_host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+
+  location = /api/dispatch {
+    proxy_pass ${BACKEND_API_BASE_URL}/dispatch;
+    proxy_set_header Host $proxy_host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+
+  location /api/dispatch/ {
+    proxy_pass ${BACKEND_API_BASE_URL}/dispatch/;
+    proxy_set_header Host $proxy_host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+
+  location = /api/places/search {
+    proxy_pass https://dapi.kakao.com/v2/local/search/keyword.json;
+    proxy_set_header Host dapi.kakao.com;
+    proxy_set_header Authorization "KakaoAK ${KAKAO_REST_API_KEY}";
+  }
+
+  location / {
+    try_files $uri $uri/ /index.html;
+  }
+}
