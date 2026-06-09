@@ -37,6 +37,11 @@ export default defineConfig(({ mode }) => {
         proxyServer.on('proxyReq', (proxyRequest) => {
           if (kakaoRestApiKey) {
             proxyRequest.setHeader('Authorization', `KakaoAK ${kakaoRestApiKey}`)
+            proxyRequest.setHeader('Origin', 'http://localhost:5173')
+            proxyRequest.setHeader(
+              'KA',
+              'sdk/1.0 os/javascript origin/http%3A%2F%2Flocalhost%3A5173',
+            )
           }
         })
       },
