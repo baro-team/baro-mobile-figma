@@ -55,9 +55,8 @@ export function RideBookingPage({ session, onLogout }: RideBookingPageProps) {
 
   return (
     <div
-      className="relative w-full max-w-md mx-auto bg-gray-50 overflow-hidden"
+      className="app-screen app-mobile-frame relative bg-gray-50 overflow-hidden"
       style={{
-        height: "100dvh",
         paddingTop: "var(--safe-area-top)",
       }}
     >
@@ -81,14 +80,14 @@ export function RideBookingPage({ session, onLogout }: RideBookingPageProps) {
         <button
           type="button"
           onClick={onLogout}
-          className="min-h-10 rounded-full bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-200"
+          className="tap-target rounded-full bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
         >
           로그아웃
         </button>
       </div>
 
       <div
-        className="absolute inset-x-0 bottom-0 z-30"
+        className="absolute inset-x-0 bottom-0 z-30 px-[var(--safe-area-left)]"
         style={{ bottom: `${keyboardInset}px` }}
       >
         <RideBottomSheet

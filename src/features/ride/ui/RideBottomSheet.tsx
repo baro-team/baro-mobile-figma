@@ -40,6 +40,7 @@ type RideBottomSheetProps = {
 };
 
 const COLLAPSED_HEIGHT = 110;
+const SHEET_VIEWPORT_MARGIN = 12;
 
 export function RideBottomSheet({
   rideState,
@@ -77,7 +78,10 @@ export function RideBottomSheet({
     startHeight: number;
   } | null>(null);
   const [expandedHeight, setExpandedHeight] = useState(0);
+  const expandedHeightRef = useRef(expandedHeight);
+  expandedHeightRef.current = expandedHeight;
   const [sheetHeight, setSheetHeight] = useState(0);
+  const [maxSheetHeight, setMaxSheetHeight] = useState(COLLAPSED_HEIGHT);
   const [isDragging, setIsDragging] = useState(false);
   const arrivalTime = dispatchResult?.estimatedPickupTime != null
     ? `${dispatchResult.estimatedPickupTime}분 후`
@@ -88,10 +92,66 @@ export function RideBottomSheet({
     ? "1.5rem"
     : "calc(1.5rem + var(--safe-area-bottom))";
   const clampHeight = useCallback(
-    (nextHeight: number, nextExpandedHeight = expandedHeight) =>
-      Math.min(Math.max(nextHeight, COLLAPSED_HEIGHT), nextExpandedHeight),
-    [expandedHeight],
+    (nextHeight: number, nextExpandedHeight = expandedHeightRef.current) =>
+      Math.min(
+        Math.max(nextHeight, COLLAPSED_HEIGHT),
+        Math.min(nextExpandedHeight, maxSheetHeight),
+      ),
+    [maxSheetHeight],
   );
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    let cachedSafeAreaTop: number | null = null;
+
+    const measureSafeAreaTop = () => {
+      if (cachedSafeAreaTop !== null) {
+        return cachedSafeAreaTop;
+      }
+
+      const probe = document.createElement("div");
+      probe.style.position = "fixed";
+      probe.style.visibility = "hidden";
+      probe.style.pointerEvents = "none";
+      probe.style.paddingTop = "env(safe-area-inset-top, 0px)";
+
+      document.body.appendChild(probe);
+      cachedSafeAreaTop = Number.parseFloat(getComputedStyle(probe).paddingTop) || 0;
+      document.body.removeChild(probe);
+
+      return cachedSafeAreaTop;
+    };
+
+    const updateMaxSheetHeight = () => {
+      const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+      const safeAreaTop = measureSafeAreaTop();
+
+      setMaxSheetHeight(
+        Math.max(COLLAPSED_HEIGHT, Math.floor(viewportHeight - safeAreaTop - SHEET_VIEWPORT_MARGIN)),
+      );
+    };
+
+    const handleResize = () => {
+      cachedSafeAreaTop = null;
+      updateMaxSheetHeight();
+    };
+
+    updateMaxSheetHeight();
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
+    window.visualViewport?.addEventListener("resize", handleResize);
+    window.visualViewport?.addEventListener("scroll", updateMaxSheetHeight);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
+      window.visualViewport?.removeEventListener("resize", handleResize);
+      window.visualViewport?.removeEventListener("scroll", updateMaxSheetHeight);
+    };
+  }, []);
 
   const renderPanel = () => {
     switch (rideState) {
@@ -161,26 +221,18 @@ export function RideBottomSheet({
       return;
     }
 
-    const nextExpandedHeight = Math.max(
-      contentRef.current.scrollHeight + 28,
-      COLLAPSED_HEIGHT,
+    const nextExpandedHeight = Math.min(
+      Math.max(contentRef.current.scrollHeight + 28, COLLAPSED_HEIGHT),
+      maxSheetHeight,
     );
 
     setExpandedHeight(nextExpandedHeight);
-    setSheetHeight((currentHeight) => {
-      if (!currentHeight || currentHeight >= nextExpandedHeight - 8 || isKeyboardOpen) {
-        return nextExpandedHeight;
-      }
-
-      return clampHeight(currentHeight, nextExpandedHeight);
-    });
+    setSheetHeight(nextExpandedHeight);
   }, [
-    clampHeight,
     destination,
     estimatedCost,
-    expandedHeight,
-    isDragging,
     isKeyboardOpen,
+    maxSheetHeight,
     origin,
     preDispatchPreview,
     isDispatchLoading,
@@ -245,12 +297,13 @@ export function RideBottomSheet({
     <motion.div
       animate={{ height: sheetHeight || expandedHeight || COLLAPSED_HEIGHT }}
       transition={isDragging ? { duration: 0 } : { type: "spring", damping: 28, stiffness: 260 }}
-      className="ds-sheet-panel w-full max-w-md mx-auto relative flex shrink-0 flex-col overflow-hidden"
+      className="ds-sheet-panel app-mobile-frame relative flex shrink-0 flex-col overflow-hidden"
+      style={{ maxHeight: maxSheetHeight }}
     >
       <button
         type="button"
         onPointerDown={handleDragStart}
-        className="flex shrink-0 cursor-grab touch-none items-center justify-center py-3 active:cursor-grabbing"
+        className="tap-target flex shrink-0 cursor-grab touch-none items-center justify-center py-3 active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-300"
         aria-label="바텀 시트 높이 조절"
       >
         <div className="ds-sheet-handle !my-0" />
