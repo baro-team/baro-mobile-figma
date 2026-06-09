@@ -132,7 +132,7 @@ export function BookingPanel({
             key={`${place.name}-${place.lat}-${place.lon}`}
             type="button"
             onClick={() => onSelect(place)}
-            className="flex w-full flex-col items-start gap-1 border-t border-[var(--color-border-subtle)] px-4 py-3 text-left first:border-t-0"
+            className="tap-target flex w-full flex-col items-start gap-1 border-t border-[var(--color-border-subtle)] px-4 py-3 text-left first:border-t-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-300"
           >
             <p className="type-label-strong ds-text-primary">{place.name}</p>
             <p className="type-caption ds-text-secondary">
@@ -155,7 +155,7 @@ export function BookingPanel({
             <button
               type="submit"
               disabled={!canRequestRide}
-              className="type-button ds-button-primary w-full"
+              className="type-button ds-button-primary tap-target w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
             >
               {isDispatchLoading
                 ? "배차 요청 중..."

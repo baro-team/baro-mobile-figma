@@ -40,6 +40,7 @@ type RideBottomSheetProps = {
 };
 
 const COLLAPSED_HEIGHT = 110;
+const SHEET_VIEWPORT_MARGIN = 12;
 
 export function RideBottomSheet({
   rideState,
@@ -78,6 +79,7 @@ export function RideBottomSheet({
   } | null>(null);
   const [expandedHeight, setExpandedHeight] = useState(0);
   const [sheetHeight, setSheetHeight] = useState(0);
+  const [maxSheetHeight, setMaxSheetHeight] = useState(COLLAPSED_HEIGHT);
   const [isDragging, setIsDragging] = useState(false);
   const arrivalTime = dispatchResult?.estimatedPickupTime != null
     ? `${dispatchResult.estimatedPickupTime}분 후`
@@ -89,9 +91,42 @@ export function RideBottomSheet({
     : "calc(1.5rem + var(--safe-area-bottom))";
   const clampHeight = useCallback(
     (nextHeight: number, nextExpandedHeight = expandedHeight) =>
-      Math.min(Math.max(nextHeight, COLLAPSED_HEIGHT), nextExpandedHeight),
-    [expandedHeight],
+      Math.min(
+        Math.max(nextHeight, COLLAPSED_HEIGHT),
+        Math.min(nextExpandedHeight, maxSheetHeight),
+      ),
+    [expandedHeight, maxSheetHeight],
   );
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const updateMaxSheetHeight = () => {
+      const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+      const safeAreaTop = Number.parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue("--safe-area-top"),
+      ) || 0;
+
+      setMaxSheetHeight(
+        Math.max(COLLAPSED_HEIGHT, Math.floor(viewportHeight - safeAreaTop - SHEET_VIEWPORT_MARGIN)),
+      );
+    };
+
+    updateMaxSheetHeight();
+    window.addEventListener("resize", updateMaxSheetHeight);
+    window.addEventListener("orientationchange", updateMaxSheetHeight);
+    window.visualViewport?.addEventListener("resize", updateMaxSheetHeight);
+    window.visualViewport?.addEventListener("scroll", updateMaxSheetHeight);
+
+    return () => {
+      window.removeEventListener("resize", updateMaxSheetHeight);
+      window.removeEventListener("orientationchange", updateMaxSheetHeight);
+      window.visualViewport?.removeEventListener("resize", updateMaxSheetHeight);
+      window.visualViewport?.removeEventListener("scroll", updateMaxSheetHeight);
+    };
+  }, []);
 
   const renderPanel = () => {
     switch (rideState) {
@@ -161,9 +196,9 @@ export function RideBottomSheet({
       return;
     }
 
-    const nextExpandedHeight = Math.max(
-      contentRef.current.scrollHeight + 28,
-      COLLAPSED_HEIGHT,
+    const nextExpandedHeight = Math.min(
+      Math.max(contentRef.current.scrollHeight + 28, COLLAPSED_HEIGHT),
+      maxSheetHeight,
     );
 
     setExpandedHeight(nextExpandedHeight);
@@ -181,6 +216,7 @@ export function RideBottomSheet({
     expandedHeight,
     isDragging,
     isKeyboardOpen,
+    maxSheetHeight,
     origin,
     preDispatchPreview,
     isDispatchLoading,
@@ -245,12 +281,13 @@ export function RideBottomSheet({
     <motion.div
       animate={{ height: sheetHeight || expandedHeight || COLLAPSED_HEIGHT }}
       transition={isDragging ? { duration: 0 } : { type: "spring", damping: 28, stiffness: 260 }}
-      className="ds-sheet-panel w-full max-w-md mx-auto relative flex shrink-0 flex-col overflow-hidden"
+      className="ds-sheet-panel app-mobile-frame relative flex shrink-0 flex-col overflow-hidden"
+      style={{ maxHeight: maxSheetHeight }}
     >
       <button
         type="button"
         onPointerDown={handleDragStart}
-        className="flex shrink-0 cursor-grab touch-none items-center justify-center py-3 active:cursor-grabbing"
+        className="tap-target flex shrink-0 cursor-grab touch-none items-center justify-center py-3 active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-300"
         aria-label="바텀 시트 높이 조절"
       >
         <div className="ds-sheet-handle !my-0" />
@@ -258,7 +295,7 @@ export function RideBottomSheet({
 
       <div
         ref={contentRef}
-        className="px-5 pt-2"
+        className="app-scroll-area min-h-0 flex-1 overflow-y-auto px-5 pt-2"
         style={{ paddingBottom: contentPaddingBottom }}
       >
         {renderPanel()}

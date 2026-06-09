@@ -50,8 +50,8 @@ export function AuthForm({
   const copy = modeCopy[mode];
 
   return (
-    <div className="flex min-h-dvh w-full items-start justify-center overflow-y-auto bg-white px-5 py-8 text-slate-900">
-      <div className="w-full max-w-md space-y-7">
+    <div className="app-screen app-scroll-area flex w-full items-start justify-center overflow-y-auto bg-white px-5 py-8 text-slate-900">
+      <div className="app-mobile-frame space-y-7">
         <div className="space-y-4 pt-2">
           <div className="ds-inline-card inline-flex w-fit items-center px-3 py-1.5">
             <span className="type-caption text-sky-700">BARO Mobility</span>
@@ -72,7 +72,7 @@ export function AuthForm({
                 type="button"
                 aria-pressed={mode === "login"}
                 disabled={isSubmitting}
-                className={`rounded-full px-4 py-2 transition ${
+                className={`tap-target rounded-full px-4 py-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 ${
                   mode === "login"
                     ? "bg-white text-sky-700 shadow-sm"
                     : "text-slate-500 hover:text-slate-800"
@@ -85,7 +85,7 @@ export function AuthForm({
                 type="button"
                 aria-pressed={mode === "sign-up"}
                 disabled={isSubmitting}
-                className={`rounded-full px-4 py-2 transition ${
+                className={`tap-target rounded-full px-4 py-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 ${
                   mode === "sign-up"
                     ? "bg-white text-sky-700 shadow-sm"
                     : "text-slate-500 hover:text-slate-800"
@@ -168,7 +168,7 @@ export function AuthForm({
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="ds-button-primary type-button h-12 w-full rounded-2xl"
+                className="ds-button-primary type-button tap-target h-12 w-full rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
               >
                 {isSubmitting ? "처리 중..." : copy.submitLabel}
               </Button>
