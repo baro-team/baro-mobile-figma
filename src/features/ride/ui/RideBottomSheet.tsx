@@ -227,15 +227,8 @@ export function RideBottomSheet({
     );
 
     setExpandedHeight(nextExpandedHeight);
-    setSheetHeight((currentHeight) => {
-      if (!currentHeight || currentHeight >= nextExpandedHeight - 8 || isKeyboardOpen) {
-        return nextExpandedHeight;
-      }
-
-      return clampHeight(currentHeight, nextExpandedHeight);
-    });
+    setSheetHeight(nextExpandedHeight);
   }, [
-    clampHeight,
     destination,
     estimatedCost,
     isKeyboardOpen,
@@ -318,7 +311,7 @@ export function RideBottomSheet({
 
       <div
         ref={contentRef}
-        className="app-scroll-area min-h-0 flex-1 overflow-y-auto px-5 pt-2"
+        className="px-5 pt-2"
         style={{ paddingBottom: contentPaddingBottom }}
       >
         {renderPanel()}

@@ -29,7 +29,7 @@ Measured with `pnpm build`.
 - Added `viewport-fit=cover` for iOS safe-area support.
 - Routed screen height through `--app-viewport-height` so visual viewport changes can be reflected consistently.
 - Added safe-area-aware mobile frame utilities.
-- Added bottom-sheet max-height clamping and internal scroll behavior for small screens/keyboard states.
+- Added bottom-sheet max-height clamping while keeping the default expanded height content-first and handle-adjustable.
 - Added shared 44px minimum touch target utility and focus rings for interactive controls.
 
 ### Validation
