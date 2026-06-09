@@ -13,6 +13,7 @@ env:
   AWS_REGION: ap-northeast-2
   ECS_CLUSTER: baro-dev
   ECS_SERVICE: baro-dev-baro-mobile
+  ECS_CONTAINER_NAME: baro-dev-baro-mobile
   ECR_REPOSITORY: baro-dev-baro-mobile
 
 jobs:
@@ -46,9 +47,91 @@ jobs:
           docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
           docker push "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
 
-      - name: Force ECS deployment
+      - name: Register task definition and deploy
+        env:
+          ECR_REGISTRY: ${{ steps.ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+          KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
         run: |
+          set -euo pipefail
+
+          if [ -z "${KAKAO_REST_API_KEY:-}" ]; then
+            echo "KAKAO_REST_API_KEY GitHub secret is empty or missing" >&2
+            exit 1
+          fi
+
+          TASK_DEF_JSON="$(mktemp)"
+          NEW_TASK_DEF_JSON="$(mktemp)"
+          trap 'rm -f "$TASK_DEF_JSON" "$NEW_TASK_DEF_JSON"' EXIT
+
+          IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          TASK_DEF_ARN="$(aws ecs describe-services \
+            --cluster "$ECS_CLUSTER" \
+            --services "$ECS_SERVICE" \
+            --query 'services[0].taskDefinition' \
+            --output text)"
+
+          if [ -z "$TASK_DEF_ARN" ] || [ "$TASK_DEF_ARN" = "None" ]; then
+            echo "Could not resolve current task definition for service $ECS_SERVICE" >&2
+            exit 1
+          fi
+
+          aws ecs describe-task-definition \
+            --task-definition "$TASK_DEF_ARN" \
+            --query 'taskDefinition' \
+            --output json > "$TASK_DEF_JSON"
+
+          CONTAINER_NAME="$ECS_CONTAINER_NAME"
+          if ! jq -e --arg name "$CONTAINER_NAME" \
+            '.containerDefinitions[] | select(.name == $name)' \
+            "$TASK_DEF_JSON" >/dev/null; then
+            CONTAINER_COUNT="$(jq '.containerDefinitions | length' "$TASK_DEF_JSON")"
+
+            if [ "$CONTAINER_COUNT" = "1" ]; then
+              CONTAINER_NAME="$(jq -r '.containerDefinitions[0].name' "$TASK_DEF_JSON")"
+            else
+              echo "Container '$CONTAINER_NAME' not found. Set ECS_CONTAINER_NAME explicitly." >&2
+              exit 1
+            fi
+          fi
+
+          jq --arg name "$CONTAINER_NAME" --arg image "$IMAGE_URI" '
+            del(
+              .taskDefinitionArn,
+              .revision,
+              .status,
+              .requiresAttributes,
+              .compatibilities,
+              .registeredAt,
+              .registeredBy,
+              .deregisteredAt
+            )
+            | .containerDefinitions |= map(
+                if .name == $name then
+                  .image = $image
+                  | .environment = (
+                      ((.environment // []) | map(select(.name != "KAKAO_REST_API_KEY")))
+                      + [{ "name": "KAKAO_REST_API_KEY", "value": env.KAKAO_REST_API_KEY }]
+                    )
+                else
+                  .
+                end
+              )
+          ' "$TASK_DEF_JSON" > "$NEW_TASK_DEF_JSON"
+
+          NEW_TASK_DEF_ARN="$(aws ecs register-task-definition \
+            --cli-input-json "file://$NEW_TASK_DEF_JSON" \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)"
+
           aws ecs update-service \
             --cluster "$ECS_CLUSTER" \
             --service "$ECS_SERVICE" \
-            --force-new-deployment
+            --task-definition "$NEW_TASK_DEF_ARN" \
+            --force-new-deployment >/dev/null
+
+          aws ecs wait services-stable \
+            --cluster "$ECS_CLUSTER" \
+            --services "$ECS_SERVICE"
+
+          echo "Deployed task definition: $NEW_TASK_DEF_ARN"
