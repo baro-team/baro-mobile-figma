@@ -12,13 +12,17 @@ const roundedClassNames = {
   "2xl": "rounded-2xl",
 };
 
+function isPresentString(item: string | null | undefined): item is string {
+  return Boolean(item);
+}
+
 export function RideVehicleCard({
   label,
   badgeLabel,
   metaItems = [],
   rounded = "2xl",
 }: RideVehicleCardProps) {
-  const visibleMetaItems = metaItems.filter(Boolean);
+  const visibleMetaItems = metaItems.filter(isPresentString);
 
   return (
     <div className={`ds-card p-5 ${roundedClassNames[rounded]}`}>

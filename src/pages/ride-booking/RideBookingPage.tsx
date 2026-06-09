@@ -47,8 +47,9 @@ export function RideBookingPage({ session, onLogout }: RideBookingPageProps) {
     isDispatchLoading,
     dispatchError,
   } = useRideFlow(session.accessToken);
+  const shouldUseDropoffRoute = rideState === "riding" || rideState === "completed";
   const dispatchRoutePath =
-    rideState === "riding"
+    shouldUseDropoffRoute
       ? dispatchResult?.dropoffRoutePath
       : dispatchResult?.pickupRoutePath;
 
