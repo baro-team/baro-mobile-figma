@@ -1,4 +1,5 @@
 import { Car } from "lucide-react";
+import { DispatchResult } from "../model/pre-dispatch-types";
 import { RideRouteSummary } from "./RideRouteSummary";
 import { RideSheetActions } from "./RideSheetActions";
 import { RideSheetPanel } from "./RideSheetPanel";
@@ -8,6 +9,7 @@ type PendingPanelProps = {
   origin: string;
   destination: string;
   searchRadius: number;
+  dispatchResult: DispatchResult | null;
   onCancelRide: () => void;
 };
 
@@ -15,6 +17,7 @@ export function PendingPanel({
   origin,
   destination,
   searchRadius,
+  dispatchResult,
   onCancelRide,
 }: PendingPanelProps) {
   return (
@@ -43,8 +46,15 @@ export function PendingPanel({
           </div>
 
           <p className="type-title ds-text-primary">
-            {searchRadius}km 반경 안의 차량 찾는중...
+            {dispatchResult
+              ? `배차 상태: ${dispatchResult.dispatchStatus}`
+              : `${searchRadius}km 반경 안의 차량 찾는중...`}
           </p>
+          {dispatchResult ? (
+            <p className="type-caption ds-text-secondary">
+              배차 #{dispatchResult.dispatchId} · 차량 ID {dispatchResult.carId} · 승강장 ID {dispatchResult.standId}
+            </p>
+          ) : null}
           <div className="flex justify-center">
             <div className="flex gap-1.5">
               <div

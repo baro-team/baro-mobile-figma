@@ -1,11 +1,17 @@
 import { motion } from "motion/react";
+import { DispatchResult } from "../model/pre-dispatch-types";
 
 type CarArrivedOverlayProps = {
   visible: boolean;
+  dispatchResult: DispatchResult | null;
   onOpenDoor: () => void;
 };
 
-export function CarArrivedOverlay({ visible, onOpenDoor }: CarArrivedOverlayProps) {
+export function CarArrivedOverlay({
+  visible,
+  dispatchResult,
+  onOpenDoor,
+}: CarArrivedOverlayProps) {
   if (!visible) {
     return null;
   }
@@ -152,11 +158,21 @@ export function CarArrivedOverlay({ visible, onOpenDoor }: CarArrivedOverlayProp
           <div className="space-y-3 p-3">
             <div className="flex justify-between items-center">
               <span className="type-label ds-text-secondary">차량ID</span>
-              <span className="type-label-strong ds-text-primary">WX-1212</span>
+              <span className="type-label-strong ds-text-primary">
+                {dispatchResult ? `#${dispatchResult.carId}` : "-"}
+              </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="type-label ds-text-secondary">차량번호</span>
-              <span className="type-label-strong ds-text-primary">123가 1234</span>
+              <span className="type-label ds-text-secondary">승강장ID</span>
+              <span className="type-label-strong ds-text-primary">
+                {dispatchResult ? `#${dispatchResult.standId}` : "-"}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="type-label ds-text-secondary">배차ID</span>
+              <span className="type-label-strong ds-text-primary">
+                {dispatchResult ? `#${dispatchResult.dispatchId}` : "-"}
+              </span>
             </div>
           </div>
 
