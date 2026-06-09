@@ -31,6 +31,7 @@ export function RideBookingPage({ session, onLogout }: RideBookingPageProps) {
     selectOriginPlace,
     selectDestinationPlace,
     preDispatchPreview,
+    dispatchResult,
     isPreDispatchLoading,
     preDispatchError,
     requestPreDispatchPreview,
@@ -46,6 +47,11 @@ export function RideBookingPage({ session, onLogout }: RideBookingPageProps) {
     isDispatchLoading,
     dispatchError,
   } = useRideFlow(session.accessToken);
+  const shouldUseDropoffRoute = rideState === "riding" || rideState === "completed";
+  const dispatchRoutePath =
+    shouldUseDropoffRoute
+      ? dispatchResult?.dropoffRoutePath
+      : dispatchResult?.pickupRoutePath;
 
   return (
     <div
@@ -61,7 +67,7 @@ export function RideBookingPage({ session, onLogout }: RideBookingPageProps) {
           destination={destination}
           originLocation={selectedOrigin}
           destinationLocation={selectedDestination}
-          routePath={preDispatchPreview?.routePath ?? null}
+          routePath={dispatchRoutePath ?? preDispatchPreview?.routePath ?? null}
           distanceKm={preDispatchPreview?.distanceKm ?? null}
           rideState={rideState}
         />
@@ -98,6 +104,7 @@ export function RideBookingPage({ session, onLogout }: RideBookingPageProps) {
           originSearchError={originSearchError}
           destinationSearchError={destinationSearchError}
           preDispatchPreview={preDispatchPreview}
+          dispatchResult={dispatchResult}
           isPreDispatchLoading={isPreDispatchLoading}
           preDispatchError={preDispatchError}
           isDispatchLoading={isDispatchLoading}
@@ -116,7 +123,11 @@ export function RideBookingPage({ session, onLogout }: RideBookingPageProps) {
         />
       </div>
 
-      <CarArrivedOverlay visible={showCarOverlay} onOpenDoor={openDoor} />
+      <CarArrivedOverlay
+        visible={showCarOverlay}
+        dispatchResult={dispatchResult}
+        onOpenDoor={openDoor}
+      />
 
       <RideCompletedOverlay
         visible={rideState === "completed"}

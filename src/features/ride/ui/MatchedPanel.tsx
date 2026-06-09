@@ -1,3 +1,4 @@
+import { DispatchResult } from "../model/pre-dispatch-types";
 import { RideFareSummary } from "./RideFareSummary";
 import { RideRouteSummary } from "./RideRouteSummary";
 import { RideSheetActions } from "./RideSheetActions";
@@ -10,14 +11,24 @@ type MatchedPanelProps = {
   destination: string;
   arrivalTime: string;
   formattedEstimatedCost: string;
+  dispatchResult: DispatchResult | null;
   onCancelRide: () => void;
 };
+
+function getVehicleLabel(dispatchResult: DispatchResult | null) {
+  if (!dispatchResult) {
+    return "배차 차량 확인 중";
+  }
+
+  return `차량 ID ${dispatchResult.carId}`;
+}
 
 export function MatchedPanel({
   origin,
   destination,
   arrivalTime,
   formattedEstimatedCost,
+  dispatchResult,
   onCancelRide,
 }: MatchedPanelProps) {
   return (
@@ -40,7 +51,16 @@ export function MatchedPanel({
       }
     >
       <RideSheetSection>
-        <RideVehicleCard label="123가 1234" rounded="2xl" />
+        <RideVehicleCard
+          label={getVehicleLabel(dispatchResult)}
+          badgeLabel={dispatchResult?.dispatchStatus}
+          metaItems={[
+            dispatchResult ? `배차 #${dispatchResult.dispatchId}` : null,
+            dispatchResult ? `승강장 #${dispatchResult.standId}` : null,
+            dispatchResult ? `요청 #${dispatchResult.requestId}` : null,
+          ]}
+          rounded="2xl"
+        />
         <div className="relative mt-4">
           <RideRouteSummary
             origin={origin}

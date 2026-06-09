@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { BookingPanel } from "./BookingPanel";
-import { PreDispatchPreview } from "../model/pre-dispatch-types";
+import { DispatchResult, PreDispatchPreview } from "../model/pre-dispatch-types";
 import { PlaceSearchResult, RideLocation } from "../model/ride-location";
 import { MatchedPanel } from "./MatchedPanel";
 import { PendingPanel } from "./PendingPanel";
@@ -21,6 +21,7 @@ type RideBottomSheetProps = {
   originSearchError: string | null;
   destinationSearchError: string | null;
   preDispatchPreview: PreDispatchPreview | null;
+  dispatchResult: DispatchResult | null;
   isPreDispatchLoading: boolean;
   preDispatchError: string | null;
   isDispatchLoading: boolean;
@@ -53,6 +54,7 @@ export function RideBottomSheet({
   originSearchError,
   destinationSearchError,
   preDispatchPreview,
+  dispatchResult,
   isPreDispatchLoading,
   preDispatchError,
   isDispatchLoading,
@@ -77,7 +79,9 @@ export function RideBottomSheet({
   const [expandedHeight, setExpandedHeight] = useState(0);
   const [sheetHeight, setSheetHeight] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const arrivalTime = `13:${String(eta).padStart(2, "0")}`;
+  const arrivalTime = dispatchResult?.estimatedPickupTime != null
+    ? `${dispatchResult.estimatedPickupTime}분 후`
+    : `${eta}분 후`;
   const formattedEstimatedCost =
     estimatedCost !== null ? `₩${estimatedCost.toLocaleString("ko-KR")}` : "-";
   const contentPaddingBottom = isKeyboardOpen
@@ -123,6 +127,7 @@ export function RideBottomSheet({
             origin={origin}
             destination={destination}
             searchRadius={searchRadius}
+            dispatchResult={dispatchResult}
             onCancelRide={onCancelRide}
           />
         );
@@ -133,6 +138,7 @@ export function RideBottomSheet({
             destination={destination}
             arrivalTime={arrivalTime}
             formattedEstimatedCost={formattedEstimatedCost}
+            dispatchResult={dispatchResult}
             onCancelRide={onCancelRide}
           />
         );
@@ -142,6 +148,7 @@ export function RideBottomSheet({
             origin={origin}
             destination={destination}
             formattedEstimatedCost={formattedEstimatedCost}
+            dispatchResult={dispatchResult}
           />
         );
       default:
@@ -178,6 +185,7 @@ export function RideBottomSheet({
     preDispatchPreview,
     isDispatchLoading,
     dispatchError,
+    dispatchResult,
     rideState,
     searchRadius,
     selectedDestination,
