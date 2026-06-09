@@ -78,6 +78,8 @@ export function RideBottomSheet({
     startHeight: number;
   } | null>(null);
   const [expandedHeight, setExpandedHeight] = useState(0);
+  const expandedHeightRef = useRef(expandedHeight);
+  expandedHeightRef.current = expandedHeight;
   const [sheetHeight, setSheetHeight] = useState(0);
   const [maxSheetHeight, setMaxSheetHeight] = useState(COLLAPSED_HEIGHT);
   const [isDragging, setIsDragging] = useState(false);
@@ -90,12 +92,12 @@ export function RideBottomSheet({
     ? "1.5rem"
     : "calc(1.5rem + var(--safe-area-bottom))";
   const clampHeight = useCallback(
-    (nextHeight: number, nextExpandedHeight = expandedHeight) =>
+    (nextHeight: number, nextExpandedHeight = expandedHeightRef.current) =>
       Math.min(
         Math.max(nextHeight, COLLAPSED_HEIGHT),
         Math.min(nextExpandedHeight, maxSheetHeight),
       ),
-    [expandedHeight, maxSheetHeight],
+    [maxSheetHeight],
   );
 
   useEffect(() => {
@@ -103,27 +105,50 @@ export function RideBottomSheet({
       return;
     }
 
+    let cachedSafeAreaTop: number | null = null;
+
+    const measureSafeAreaTop = () => {
+      if (cachedSafeAreaTop !== null) {
+        return cachedSafeAreaTop;
+      }
+
+      const probe = document.createElement("div");
+      probe.style.position = "fixed";
+      probe.style.visibility = "hidden";
+      probe.style.pointerEvents = "none";
+      probe.style.paddingTop = "env(safe-area-inset-top, 0px)";
+
+      document.body.appendChild(probe);
+      cachedSafeAreaTop = Number.parseFloat(getComputedStyle(probe).paddingTop) || 0;
+      document.body.removeChild(probe);
+
+      return cachedSafeAreaTop;
+    };
+
     const updateMaxSheetHeight = () => {
       const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
-      const safeAreaTop = Number.parseFloat(
-        getComputedStyle(document.documentElement).getPropertyValue("--safe-area-top"),
-      ) || 0;
+      const safeAreaTop = measureSafeAreaTop();
 
       setMaxSheetHeight(
         Math.max(COLLAPSED_HEIGHT, Math.floor(viewportHeight - safeAreaTop - SHEET_VIEWPORT_MARGIN)),
       );
     };
 
+    const handleResize = () => {
+      cachedSafeAreaTop = null;
+      updateMaxSheetHeight();
+    };
+
     updateMaxSheetHeight();
-    window.addEventListener("resize", updateMaxSheetHeight);
-    window.addEventListener("orientationchange", updateMaxSheetHeight);
-    window.visualViewport?.addEventListener("resize", updateMaxSheetHeight);
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
+    window.visualViewport?.addEventListener("resize", handleResize);
     window.visualViewport?.addEventListener("scroll", updateMaxSheetHeight);
 
     return () => {
-      window.removeEventListener("resize", updateMaxSheetHeight);
-      window.removeEventListener("orientationchange", updateMaxSheetHeight);
-      window.visualViewport?.removeEventListener("resize", updateMaxSheetHeight);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
+      window.visualViewport?.removeEventListener("resize", handleResize);
       window.visualViewport?.removeEventListener("scroll", updateMaxSheetHeight);
     };
   }, []);
@@ -213,8 +238,6 @@ export function RideBottomSheet({
     clampHeight,
     destination,
     estimatedCost,
-    expandedHeight,
-    isDragging,
     isKeyboardOpen,
     maxSheetHeight,
     origin,
