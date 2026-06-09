@@ -113,6 +113,7 @@ jobs:
                       ((.environment // []) | map(select(.name != "KAKAO_REST_API_KEY")))
                       + [{ "name": "KAKAO_REST_API_KEY", "value": env.KAKAO_REST_API_KEY }]
                     )
+                  | .secrets = ((.secrets // []) | map(select(.name != "KAKAO_REST_API_KEY")))
                 else
                   .
                 end
