@@ -42,6 +42,7 @@ export function RideBookingPage({ session, onLogout }: RideBookingPageProps) {
     eta,
     searchRadius,
     showCarOverlay,
+    vehicleLocation,
     requestRide,
     openDoor,
     resetToBooking,
@@ -68,6 +69,7 @@ export function RideBookingPage({ session, onLogout }: RideBookingPageProps) {
           destination={destination}
           originLocation={selectedOrigin}
           destinationLocation={selectedDestination}
+          vehicleLocation={vehicleLocation}
           routePath={dispatchRoutePath ?? preDispatchPreview?.routePath ?? null}
           distanceKm={preDispatchPreview?.distanceKm ?? null}
           rideState={rideState}

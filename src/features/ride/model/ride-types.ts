@@ -1,6 +1,7 @@
 export type {
   PlaceSearchResult,
   RideLocation,
+  VehicleLocation,
   RoutePoint,
 } from "./ride-location";
 export type {

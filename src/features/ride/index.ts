@@ -7,6 +7,7 @@ export type { RideEvent, RideState } from "./model/ride-machine";
 export type {
   PlaceSearchResult,
   RideLocation,
+  VehicleLocation,
   RoutePoint,
 } from "./model/ride-location";
 export type {

@@ -38,6 +38,18 @@ server {
     proxy_set_header X-Forwarded-Proto $scheme;
   }
 
+  location ~ ^/api/dispatch/([0-9]+/vehicle-location/stream)$ {
+    proxy_pass ${BACKEND_API_BASE_URL}/dispatch/$1;
+    proxy_http_version 1.1;
+    proxy_set_header Host $proxy_host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_buffering off;
+    proxy_cache off;
+    chunked_transfer_encoding off;
+    add_header Cache-Control no-cache;
+  }
+
   location = /api/places/search {
     proxy_pass https://dapi.kakao.com/v2/local/search/keyword.json;
     proxy_set_header Host dapi.kakao.com;
