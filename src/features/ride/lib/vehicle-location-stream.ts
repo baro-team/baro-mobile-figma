@@ -14,6 +14,12 @@ function parseVehicleLocation(payload: unknown): VehicleLocation | null {
   return {
     lat,
     lon,
+    carNumber:
+      typeof data.carNumber === "string"
+        ? data.carNumber
+        : typeof data.car_number === "string"
+          ? data.car_number
+          : undefined,
     heading: Number.isFinite(Number(data.heading)) ? Number(data.heading) : undefined,
     speed: Number.isFinite(Number(data.speed)) ? Number(data.speed) : undefined,
     phase: typeof data.phase === "string" ? data.phase : undefined,

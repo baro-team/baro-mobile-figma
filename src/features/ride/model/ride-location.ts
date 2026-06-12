@@ -14,6 +14,7 @@ export type RoutePoint = [lon: number, lat: number];
 export type VehicleLocation = {
   lat: number;
   lon: number;
+  carNumber?: string;
   heading?: number;
   speed?: number;
   phase?: string;

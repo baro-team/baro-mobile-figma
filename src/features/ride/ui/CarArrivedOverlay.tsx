@@ -157,21 +157,9 @@ export function CarArrivedOverlay({
 
           <div className="space-y-3 p-3">
             <div className="flex justify-between items-center">
-              <span className="type-label ds-text-secondary">차량ID</span>
+              <span className="type-label ds-text-secondary">차량번호</span>
               <span className="type-label-strong ds-text-primary">
-                {dispatchResult ? `#${dispatchResult.carId}` : "-"}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="type-label ds-text-secondary">승강장ID</span>
-              <span className="type-label-strong ds-text-primary">
-                {dispatchResult ? `#${dispatchResult.standId}` : "-"}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="type-label ds-text-secondary">배차ID</span>
-              <span className="type-label-strong ds-text-primary">
-                {dispatchResult ? `#${dispatchResult.dispatchId}` : "-"}
+                {dispatchResult?.carNumber ?? "확인 중"}
               </span>
             </div>
           </div>

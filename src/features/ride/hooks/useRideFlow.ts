@@ -108,6 +108,11 @@ export function useRideFlow(accessToken: string) {
         {
           onMessage: (location) => {
             setVehicleLocation(location);
+            if (location.carNumber) {
+              setDispatchResult((current) =>
+                current ? { ...current, carNumber: location.carNumber } : current,
+              );
+            }
 
             const status = location.status;
 
