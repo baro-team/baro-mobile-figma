@@ -51,14 +51,8 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
-          KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
         run: |
           set -euo pipefail
-
-          if [ -z "${KAKAO_REST_API_KEY:-}" ]; then
-            echo "KAKAO_REST_API_KEY GitHub secret is empty or missing" >&2
-            exit 1
-          fi
 
           TASK_DEF_JSON="$(mktemp)"
           NEW_TASK_DEF_JSON="$(mktemp)"
@@ -110,15 +104,40 @@ jobs:
                 if .name == $name then
                   .image = $image
                   | .environment = (
-                      ((.environment // []) | map(select(.name != "KAKAO_REST_API_KEY")))
-                      + [{ "name": "KAKAO_REST_API_KEY", "value": env.KAKAO_REST_API_KEY }]
+                      (.environment // []) | map(select(.name != "KAKAO_REST_API_KEY"))
                     )
-                  | .secrets = ((.secrets // []) | map(select(.name != "KAKAO_REST_API_KEY")))
                 else
                   .
                 end
               )
           ' "$TASK_DEF_JSON" > "$NEW_TASK_DEF_JSON"
+
+          if ! jq -e --arg name "$CONTAINER_NAME" '
+            .containerDefinitions[]
+            | select(.name == $name)
+            | any(.secrets // []; .name == "KAKAO_REST_API_KEY")
+          ' "$NEW_TASK_DEF_JSON" >/dev/null; then
+            echo "KAKAO_REST_API_KEY must be configured as an ECS secret. Apply baro-terraform first and populate Secrets Manager: baro-dev/mobile/KAKAO_REST_API_KEY" >&2
+            exit 1
+          fi
+
+          KAKAO_SECRET_ID="$(jq -r --arg name "$CONTAINER_NAME" '
+            .containerDefinitions[]
+            | select(.name == $name)
+            | (.secrets // [])[]
+            | select(.name == "KAKAO_REST_API_KEY")
+            | .valueFrom
+          ' "$NEW_TASK_DEF_JSON")"
+
+          KAKAO_SECRET_VALUE="$(aws secretsmanager get-secret-value \
+            --secret-id "$KAKAO_SECRET_ID" \
+            --query SecretString \
+            --output text)"
+
+          if [ -z "$KAKAO_SECRET_VALUE" ] || [ "$KAKAO_SECRET_VALUE" = "None" ]; then
+            echo "Secrets Manager value is empty: $KAKAO_SECRET_ID" >&2
+            exit 1
+          fi
 
           NEW_TASK_DEF_ARN="$(aws ecs register-task-definition \
             --cli-input-json "file://$NEW_TASK_DEF_JSON" \
