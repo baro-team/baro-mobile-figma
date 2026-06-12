@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useMobileViewport } from "../../app/hooks/useMobileViewport";
 import {
   CarArrivedOverlay,
@@ -15,6 +16,7 @@ type RideBookingPageProps = {
 
 export function RideBookingPage({ session, onLogout }: RideBookingPageProps) {
   const { isKeyboardOpen, keyboardInset } = useMobileViewport();
+  const [bottomSheetHeight, setBottomSheetHeight] = useState(0);
   const {
     origin,
     setOrigin,
@@ -69,6 +71,7 @@ export function RideBookingPage({ session, onLogout }: RideBookingPageProps) {
           routePath={dispatchRoutePath ?? preDispatchPreview?.routePath ?? null}
           distanceKm={preDispatchPreview?.distanceKm ?? null}
           rideState={rideState}
+          mapViewportBottomInset={bottomSheetHeight + keyboardInset}
         />
       </div>
 
@@ -119,6 +122,7 @@ export function RideBookingPage({ session, onLogout }: RideBookingPageProps) {
           onRequestPreview={requestPreDispatchPreview}
           onRequestRide={requestRide}
           onCancelRide={cancelRide}
+          onHeightChange={setBottomSheetHeight}
         />
       </div>
 

@@ -37,6 +37,7 @@ type RideBottomSheetProps = {
   onRequestPreview: () => void;
   onRequestRide: () => void;
   onCancelRide: () => void;
+  onHeightChange?: (height: number) => void;
 };
 
 const COLLAPSED_HEIGHT = 110;
@@ -71,6 +72,7 @@ export function RideBottomSheet({
   onRequestPreview,
   onRequestRide,
   onCancelRide,
+  onHeightChange,
 }: RideBottomSheetProps) {
   const contentRef = useRef<HTMLDivElement | null>(null);
   const dragStateRef = useRef<{
@@ -238,11 +240,23 @@ export function RideBottomSheet({
     isDispatchLoading,
     dispatchError,
     dispatchResult,
+    destinationSearchError,
+    destinationSearchResults,
+    isDestinationSearchLoading,
     rideState,
+    originSearchError,
+    originSearchResults,
+    isOriginSearchLoading,
     searchRadius,
     selectedDestination,
     selectedOrigin,
   ]);
+
+  useEffect(() => {
+    if (sheetHeight > 0) {
+      onHeightChange?.(sheetHeight);
+    }
+  }, [onHeightChange, sheetHeight]);
 
   useEffect(() => {
     if (!isKeyboardOpen) {
