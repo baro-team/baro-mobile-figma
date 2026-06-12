@@ -12,6 +12,7 @@ type MapStageProps = {
   routePath: RoutePoint[] | null;
   distanceKm: number | null;
   rideState: RideState;
+  mapViewportBottomInset: number;
 };
 
 type ProjectedPoint = {
@@ -20,6 +21,8 @@ type ProjectedPoint = {
 };
 
 const MAP_PADDING = 0.16;
+const MIN_MAP_BOUNDS_PADDING = 40;
+const MAP_BOUNDS_GAP = 32;
 const ROUTE_DRAW_DURATION_MS = 1400;
 
 function easeOutCubic(progress: number) {
@@ -33,7 +36,7 @@ function getVisibleRoutePointCount(elapsedMs: number, totalPointCount: number) {
   return Math.max(2, Math.ceil(easedProgress * totalPointCount));
 }
 
-function getProjectedRoutePoints(routePath: RoutePoint[]) {
+function getProjectedRoutePoints(routePath: RoutePoint[], bottomInsetRatio = 0) {
   if (routePath.length === 0) {
     return [];
   }
@@ -47,11 +50,15 @@ function getProjectedRoutePoints(routePath: RoutePoint[]) {
   const lonRange = maxLon - minLon || 0.001;
   const latRange = maxLat - minLat || 0.001;
 
+  const topPadding = MAP_PADDING;
+  const bottomPadding = Math.min(0.44, Math.max(MAP_PADDING, MAP_PADDING + bottomInsetRatio));
+  const availableHeight = Math.max(0.36, 1 - topPadding - bottomPadding);
+
   return routePath.map(([lon, lat]) => {
     const normalizedX = (lon - minLon) / lonRange;
     const normalizedY = (maxLat - lat) / latRange;
     const x = (MAP_PADDING + normalizedX * (1 - MAP_PADDING * 2)) * 100;
-    const y = (MAP_PADDING + normalizedY * (1 - MAP_PADDING * 2)) * 100;
+    const y = (topPadding + normalizedY * availableHeight) * 100;
 
     return { x, y };
   });
@@ -88,8 +95,13 @@ function FallbackMapStage({
   distanceKm,
   rideState,
   routePath,
+  mapViewportBottomInset,
 }: MapStageProps) {
-  const projectedRoutePoints = routePath ? getProjectedRoutePoints(routePath) : [];
+  const viewportHeight = typeof window === "undefined" ? 800 : window.innerHeight;
+  const bottomInsetRatio = Math.min(0.28, mapViewportBottomInset / viewportHeight);
+  const projectedRoutePoints = routePath
+    ? getProjectedRoutePoints(routePath, bottomInsetRatio)
+    : [];
   const pathSignature =
     routePath?.map(([lon, lat]) => `${lon}:${lat}`).join("|") ?? "";
   const originMarkerPosition =
@@ -235,6 +247,7 @@ export function MapStage(props: MapStageProps) {
     routePath,
     distanceKm,
     rideState,
+    mapViewportBottomInset,
   } = props;
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const [isKakaoMapReady, setIsKakaoMapReady] = useState(false);
@@ -376,7 +389,13 @@ export function MapStage(props: MapStageProps) {
     }
 
     if (markerLatLngs.length > 0 || routeLatLngs.length > 1) {
-      map.setBounds(bounds, 40, 40, 40, 40);
+      map.setBounds(
+        bounds,
+        MIN_MAP_BOUNDS_PADDING,
+        MIN_MAP_BOUNDS_PADDING,
+        Math.max(MIN_MAP_BOUNDS_PADDING, Math.ceil(mapViewportBottomInset + MAP_BOUNDS_GAP)),
+        MIN_MAP_BOUNDS_PADDING,
+      );
     }
 
     return () => {
@@ -392,6 +411,7 @@ export function MapStage(props: MapStageProps) {
     originLocation,
     pathSignature,
     routePath,
+    mapViewportBottomInset,
   ]);
 
   if (shouldUseFallbackMap || !isKakaoMapReady) {
