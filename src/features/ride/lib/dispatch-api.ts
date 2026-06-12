@@ -34,9 +34,8 @@ function unwrapDispatchResponse(response: DispatchResponse): DispatchResult {
 
   const dispatchId = data.dispatchId ?? data.dispatch_id;
   const requestId = data.requestId ?? data.request_id;
-  const userId = data.userId ?? data.user_id;
   const carId = data.carId ?? data.car_id ?? 0;
-  const standId = data.standId ?? data.stand_id ?? 0;
+  const carNumber = data.carNumber ?? data.car_number;
   const estimatedPickupTime =
     data.estimatedPickupTime ?? data.estimated_pickup_time;
   const estimatedRideTime = data.estimatedRideTime ?? data.estimated_ride_time;
@@ -48,7 +47,6 @@ function unwrapDispatchResponse(response: DispatchResponse): DispatchResult {
   if (
     dispatchId == null ||
     requestId == null ||
-    userId == null ||
     estimatedRideTime == null ||
     data.fare == null ||
     !dispatchStatus
@@ -59,9 +57,8 @@ function unwrapDispatchResponse(response: DispatchResponse): DispatchResult {
   return {
     dispatchId,
     requestId,
-    userId,
     carId,
-    standId,
+    carNumber,
     estimatedPickupTime,
     estimatedRideTime,
     pickupRoutePath,

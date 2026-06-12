@@ -20,7 +20,7 @@ function getVehicleLabel(dispatchResult: DispatchResult | null) {
     return "배차 차량 확인 중";
   }
 
-  return `차량 ID ${dispatchResult.carId}`;
+  return dispatchResult.carNumber ?? "차량 번호 확인 중";
 }
 
 export function MatchedPanel({
@@ -55,9 +55,7 @@ export function MatchedPanel({
           label={getVehicleLabel(dispatchResult)}
           badgeLabel={dispatchResult?.dispatchStatus}
           metaItems={[
-            dispatchResult ? `배차 #${dispatchResult.dispatchId}` : null,
-            dispatchResult ? `승강장 #${dispatchResult.standId}` : null,
-            dispatchResult ? `요청 #${dispatchResult.requestId}` : null,
+            dispatchResult ? `차량번호 ${dispatchResult.carNumber ?? "확인 중"}` : null,
           ]}
           rounded="2xl"
         />

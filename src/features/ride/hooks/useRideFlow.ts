@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { requestDispatch } from "../lib/dispatch-api";
+import { openVehicleLocationStream } from "../lib/vehicle-location-stream";
 import { searchPlacesByKeyword } from "../lib/place-search-api";
 import { requestPreDispatch } from "../lib/pre-dispatch-api";
 import { RideState, transitionRideState } from "../model/ride-machine";
@@ -7,7 +8,11 @@ import {
   DispatchResult,
   PreDispatchPreview,
 } from "../model/pre-dispatch-types";
-import { PlaceSearchResult, RideLocation } from "../model/ride-location";
+import {
+  PlaceSearchResult,
+  RideLocation,
+  VehicleLocation,
+} from "../model/ride-location";
 
 type TimerId = ReturnType<typeof setTimeout>;
 
@@ -44,12 +49,19 @@ export function useRideFlow(accessToken: string) {
   const [eta, setEta] = useState(5);
   const [searchRadius, setSearchRadius] = useState(5);
   const [showCarOverlay, setShowCarOverlay] = useState(false);
+  const [vehicleLocation, setVehicleLocation] = useState<VehicleLocation | null>(null);
 
   const timersRef = useRef<TimerId[]>([]);
+  const closeVehicleStreamRef = useRef<(() => void) | null>(null);
 
   const clearAllTimers = useCallback(() => {
     timersRef.current.forEach((timer) => clearTimeout(timer));
     timersRef.current = [];
+  }, []);
+
+  const clearVehicleStream = useCallback(() => {
+    closeVehicleStreamRef.current?.();
+    closeVehicleStreamRef.current = null;
   }, []);
 
   const schedule = useCallback((callback: () => void, delayMs: number) => {
@@ -74,6 +86,7 @@ export function useRideFlow(accessToken: string) {
       setDispatchResult(nextDispatchResult);
 
       clearAllTimers();
+      clearVehicleStream();
 
       setEstimatedCost(nextDispatchResult.fare);
       setEta(
@@ -85,10 +98,38 @@ export function useRideFlow(accessToken: string) {
 
       schedule(() => setSearchRadius(10), 1000);
       schedule(() => setSearchRadius(20), 3000);
-      schedule(() => {
-        setRideState((current) => transitionRideState(current, "CAR_MATCHED"));
-      }, 4000);
-      schedule(() => setShowCarOverlay(true), 8000);
+      setRideState((current) => transitionRideState(current, "CAR_MATCHED"));
+      setVehicleLocation(null);
+      setShowCarOverlay(false);
+
+      closeVehicleStreamRef.current = openVehicleLocationStream(
+        nextDispatchResult.dispatchId,
+        accessToken,
+        {
+          onMessage: (location) => {
+            setVehicleLocation(location);
+            if (location.carNumber) {
+              setDispatchResult((current) =>
+                current ? { ...current, carNumber: location.carNumber } : current,
+              );
+            }
+
+            const status = location.status;
+
+            if (status === "arrived_pickup") {
+              setShowCarOverlay(true);
+            }
+
+            if (status === "arrived_destination" || status === "completed") {
+              setShowCarOverlay(false);
+              setRideState((current) =>
+                transitionRideState(current, "COMPLETE_RIDE"),
+              );
+              clearVehicleStream();
+            }
+          },
+        },
+      );
     } catch (error) {
       setDispatchResult(null);
       setDispatchError(
@@ -99,6 +140,7 @@ export function useRideFlow(accessToken: string) {
     }
   }, [
     clearAllTimers,
+    clearVehicleStream,
     preDispatchPreview,
     schedule,
     selectedDestination,
@@ -174,23 +216,20 @@ export function useRideFlow(accessToken: string) {
   const openDoor = useCallback(() => {
     setShowCarOverlay(false);
     setRideState((current) => transitionRideState(current, "OPEN_DOOR"));
-
     clearAllTimers();
-    schedule(
-      () =>
-        setRideState((current) => transitionRideState(current, "COMPLETE_RIDE")),
-      10000,
-    );
-  }, [clearAllTimers, schedule]);
+  }, [clearAllTimers]);
 
   const resetToBooking = useCallback(() => {
     clearAllTimers();
+    clearVehicleStream();
     setRideState((current) => transitionRideState(current, "RESET_TO_BOOKING"));
     setShowCarOverlay(false);
-  }, [clearAllTimers]);
+    setVehicleLocation(null);
+  }, [clearAllTimers, clearVehicleStream]);
 
   const cancelRide = useCallback(() => {
     clearAllTimers();
+    clearVehicleStream();
     setRideState((current) => transitionRideState(current, "RESET_TO_BOOKING"));
     setEstimatedCost(null);
     setOrigin("");
@@ -207,7 +246,8 @@ export function useRideFlow(accessToken: string) {
     setDispatchError(null);
     setSearchRadius(5);
     setShowCarOverlay(false);
-  }, [clearAllTimers]);
+    setVehicleLocation(null);
+  }, [clearAllTimers, clearVehicleStream]);
 
   useEffect(() => {
     if (selectedOrigin && selectedDestination) {
@@ -292,6 +332,7 @@ export function useRideFlow(accessToken: string) {
   }, [destination, selectedDestination]);
 
   useEffect(() => clearAllTimers, [clearAllTimers]);
+  useEffect(() => clearVehicleStream, [clearVehicleStream]);
 
   return {
     origin,
@@ -320,6 +361,7 @@ export function useRideFlow(accessToken: string) {
     eta,
     searchRadius,
     showCarOverlay,
+    vehicleLocation,
     requestRide,
     openDoor,
     resetToBooking,

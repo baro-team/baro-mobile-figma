@@ -2,13 +2,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Navigation } from "lucide-react";
 import { loadKakaoMapSdk } from "../lib/kakao-map-sdk";
 import { RideState } from "../model/ride-machine";
-import { RideLocation, RoutePoint } from "../model/ride-location";
+import { RideLocation, RoutePoint, VehicleLocation } from "../model/ride-location";
 
 type MapStageProps = {
   origin: string;
   destination: string;
   originLocation: RideLocation | null;
   destinationLocation: RideLocation | null;
+  vehicleLocation: VehicleLocation | null;
   routePath: RoutePoint[] | null;
   distanceKm: number | null;
   rideState: RideState;
@@ -24,6 +25,14 @@ const MAP_PADDING = 0.16;
 const MIN_MAP_BOUNDS_PADDING = 40;
 const MAP_BOUNDS_GAP = 32;
 const ROUTE_DRAW_DURATION_MS = 1400;
+const VEHICLE_MARKER_MOVE_DURATION_MS = 650;
+
+type KakaoMapInstance = unknown;
+type KakaoLatLngInstance = unknown;
+type KakaoOverlayInstance = {
+  setMap: (map: unknown | null) => void;
+  setPosition?: (latLng: unknown) => void;
+};
 
 function easeOutCubic(progress: number) {
   return 1 - Math.pow(1 - progress, 3);
@@ -92,6 +101,7 @@ function FallbackMapStage({
   destination,
   originLocation,
   destinationLocation,
+  vehicleLocation,
   distanceKm,
   rideState,
   routePath,
@@ -115,6 +125,10 @@ function FallbackMapStage({
   const routePolylinePoints = projectedRoutePoints
     .map((point) => `${point.x},${point.y}`)
     .join(" ");
+  const vehicleMarkerPosition =
+    vehicleLocation && projectedRoutePoints.length > 0
+      ? projectedRoutePoints[Math.floor(projectedRoutePoints.length / 2)]
+      : null;
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100">
@@ -195,6 +209,10 @@ function FallbackMapStage({
           </p>
         </div>
       ) : null}
+
+      {vehicleMarkerPosition ? (
+        <FallbackMarker position={vehicleMarkerPosition} label="차량" variant="destination" />
+      ) : null}
     </div>
   );
 }
@@ -244,12 +262,17 @@ export function MapStage(props: MapStageProps) {
   const {
     originLocation,
     destinationLocation,
+    vehicleLocation,
     routePath,
     distanceKm,
     rideState,
     mapViewportBottomInset,
   } = props;
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<KakaoMapInstance | null>(null);
+  const vehicleOverlayRef = useRef<KakaoOverlayInstance | null>(null);
+  const vehiclePositionRef = useRef<{ lat: number; lon: number } | null>(null);
+  const vehicleAnimationFrameRef = useRef<number | null>(null);
   const [isKakaoMapReady, setIsKakaoMapReady] = useState(false);
   const [shouldUseFallbackMap, setShouldUseFallbackMap] = useState(false);
 
@@ -303,6 +326,7 @@ export function MapStage(props: MapStageProps) {
       center: mapCenter,
       level: markerLatLngs.length > 1 ? 7 : 5,
     });
+    mapRef.current = map;
 
     const overlays: Array<{ setMap: (map: unknown | null) => void }> = [];
     const bounds = new kakao.maps.LatLngBounds();
@@ -409,6 +433,15 @@ export function MapStage(props: MapStageProps) {
     }
 
     return () => {
+      mapRef.current = null;
+      vehiclePositionRef.current = null;
+      if (vehicleAnimationFrameRef.current !== null) {
+        cancelAnimationFrame(vehicleAnimationFrameRef.current);
+        vehicleAnimationFrameRef.current = null;
+      }
+      vehicleOverlayRef.current?.setMap(null);
+      vehicleOverlayRef.current = null;
+
       if (routeAnimationFrameId !== null) {
         cancelAnimationFrame(routeAnimationFrameId);
       }
@@ -423,6 +456,81 @@ export function MapStage(props: MapStageProps) {
     routePath,
     mapViewportBottomInset,
   ]);
+
+  useEffect(() => {
+    if (!isKakaoMapReady || !window.kakao?.maps || !mapRef.current) {
+      return;
+    }
+
+    const { kakao } = window;
+
+    if (!vehicleLocation) {
+      vehicleOverlayRef.current?.setMap(null);
+      vehicleOverlayRef.current = null;
+      vehiclePositionRef.current = null;
+      return;
+    }
+
+    const nextPosition = { lat: vehicleLocation.lat, lon: vehicleLocation.lon };
+    const setOverlayPosition = (position: KakaoLatLngInstance) => {
+      if (!vehicleOverlayRef.current) {
+        vehicleOverlayRef.current = new kakao.maps.CustomOverlay({
+          map: mapRef.current,
+          position,
+          content: createMarkerContent("차량", "destination"),
+          yAnchor: 1.1,
+        });
+        return;
+      }
+
+      vehicleOverlayRef.current.setPosition?.(position);
+    };
+
+    if (vehicleAnimationFrameRef.current !== null) {
+      cancelAnimationFrame(vehicleAnimationFrameRef.current);
+      vehicleAnimationFrameRef.current = null;
+    }
+
+    const previousPosition = vehiclePositionRef.current;
+    if (!previousPosition) {
+      setOverlayPosition(new kakao.maps.LatLng(nextPosition.lat, nextPosition.lon));
+      vehiclePositionRef.current = nextPosition;
+      return;
+    }
+
+    let animationStartedAt: number | null = null;
+    const animateVehicle = (frameTime: number) => {
+      if (animationStartedAt === null) {
+        animationStartedAt = frameTime;
+      }
+
+      const progress = Math.min(
+        (frameTime - animationStartedAt) / VEHICLE_MARKER_MOVE_DURATION_MS,
+        1,
+      );
+      const easedProgress = easeOutCubic(progress);
+      const lat = previousPosition.lat + (nextPosition.lat - previousPosition.lat) * easedProgress;
+      const lon = previousPosition.lon + (nextPosition.lon - previousPosition.lon) * easedProgress;
+
+      setOverlayPosition(new kakao.maps.LatLng(lat, lon));
+      vehiclePositionRef.current = { lat, lon };
+
+      if (progress < 1) {
+        vehicleAnimationFrameRef.current = requestAnimationFrame(animateVehicle);
+      } else {
+        vehicleAnimationFrameRef.current = null;
+      }
+    };
+
+    vehicleAnimationFrameRef.current = requestAnimationFrame(animateVehicle);
+
+    return () => {
+      if (vehicleAnimationFrameRef.current !== null) {
+        cancelAnimationFrame(vehicleAnimationFrameRef.current);
+        vehicleAnimationFrameRef.current = null;
+      }
+    };
+  }, [isKakaoMapReady, vehicleLocation]);
 
   if (shouldUseFallbackMap || !isKakaoMapReady) {
     return <FallbackMapStage {...props} />;

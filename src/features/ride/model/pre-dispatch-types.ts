@@ -30,6 +30,8 @@ export type DispatchResponseData = {
   user_id?: number;
   carId?: number;
   car_id?: number;
+  carNumber?: string;
+  car_number?: string;
   standId?: number;
   stand_id?: number;
   estimatedPickupTime?: number;
@@ -76,9 +78,8 @@ export type PreDispatchPreview = {
 export type DispatchResult = {
   dispatchId: number;
   requestId: number;
-  userId: number;
   carId: number;
-  standId: number;
+  carNumber?: string;
   estimatedPickupTime?: number;
   estimatedRideTime: number;
   pickupRoutePath: RoutePoint[];

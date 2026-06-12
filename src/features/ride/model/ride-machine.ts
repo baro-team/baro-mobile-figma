@@ -15,7 +15,7 @@ export type RideEvent =
 const rideTransitions: Record<RideState, RideEvent[]> = {
   booking: ["REQUEST_RIDE"],
   pending: ["CAR_MATCHED", "RESET_TO_BOOKING"],
-  matched: ["OPEN_DOOR", "RESET_TO_BOOKING"],
+  matched: ["OPEN_DOOR", "COMPLETE_RIDE", "RESET_TO_BOOKING"],
   riding: ["COMPLETE_RIDE", "RESET_TO_BOOKING"],
   completed: ["RESET_TO_BOOKING"],
 };

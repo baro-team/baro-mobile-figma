@@ -52,7 +52,7 @@ export function PendingPanel({
           </p>
           {dispatchResult ? (
             <p className="type-caption ds-text-secondary">
-              배차 #{dispatchResult.dispatchId} · 차량 ID {dispatchResult.carId} · 승강장 ID {dispatchResult.standId}
+              차량번호 {dispatchResult.carNumber ?? "확인 중"}
             </p>
           ) : null}
           <div className="flex justify-center">
