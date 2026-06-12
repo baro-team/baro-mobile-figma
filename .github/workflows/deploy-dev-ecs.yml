@@ -115,7 +115,7 @@ jobs:
           if ! jq -e --arg name "$CONTAINER_NAME" '
             .containerDefinitions[]
             | select(.name == $name)
-            | any(.secrets // []; .name == "KAKAO_REST_API_KEY")
+            | any((.secrets // [])[]; .name == "KAKAO_REST_API_KEY")
           ' "$NEW_TASK_DEF_JSON" >/dev/null; then
             echo "KAKAO_REST_API_KEY must be configured as an ECS secret. Apply baro-terraform first and populate Secrets Manager: baro-dev/mobile/KAKAO_REST_API_KEY" >&2
             exit 1
