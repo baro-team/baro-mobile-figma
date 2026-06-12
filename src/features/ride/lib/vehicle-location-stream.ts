@@ -67,27 +67,36 @@ export function openVehicleLocationStream(
       }
 
       const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      reconnectAttempt = 0;
+      const abortListener = () => {
+        void reader.cancel();
+      };
+      abortController.signal.addEventListener("abort", abortListener);
 
-      while (!abortController.signal.aborted) {
-        const { done, value } = await reader.read();
-        if (done) break;
+      try {
+        const decoder = new TextDecoder();
+        let buffer = "";
+        reconnectAttempt = 0;
 
-        buffer += decoder.decode(value, { stream: true });
-        const events = buffer.split(/\r?\n\r?\n/);
-        buffer = events.pop() ?? "";
+        while (!abortController.signal.aborted) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-        for (const event of events) {
-          const data = event
-            .split(/\r?\n/)
-            .filter((line) => line.startsWith("data:"))
-            .map((line) => line.slice(5).trimStart())
-            .join("\n");
+          buffer += decoder.decode(value, { stream: true });
+          const events = buffer.split(/\r?\n\r?\n/);
+          buffer = events.pop() ?? "";
 
-          if (data) handlePayload(data);
+          for (const event of events) {
+            const data = event
+              .split(/\r?\n/)
+              .filter((line) => line.startsWith("data:"))
+              .map((line) => line.slice(5).trimStart())
+              .join("\n");
+
+            if (data) handlePayload(data);
+          }
         }
+      } finally {
+        abortController.signal.removeEventListener("abort", abortListener);
       }
 
       scheduleReconnect();

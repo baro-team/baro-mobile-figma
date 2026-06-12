@@ -109,15 +109,13 @@ export function useRideFlow(accessToken: string) {
           onMessage: (location) => {
             setVehicleLocation(location);
 
-            const phase = `${location.phase ?? ""} ${location.status ?? ""}`.toLowerCase();
-            if (phase.includes("pickup") && phase.includes("arriv")) {
+            const status = location.status;
+
+            if (status === "arrived_pickup") {
               setShowCarOverlay(true);
             }
-            if (
-              phase.includes("destination") ||
-              phase.includes("dropoff") ||
-              phase.includes("complete")
-            ) {
+
+            if (status === "arrived_destination" || status === "completed") {
               setShowCarOverlay(false);
               setRideState((current) =>
                 transitionRideState(current, "COMPLETE_RIDE"),

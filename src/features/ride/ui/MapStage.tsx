@@ -513,16 +513,23 @@ export function MapStage(props: MapStageProps) {
       const lon = previousPosition.lon + (nextPosition.lon - previousPosition.lon) * easedProgress;
 
       setOverlayPosition(new kakao.maps.LatLng(lat, lon));
+      vehiclePositionRef.current = { lat, lon };
 
       if (progress < 1) {
         vehicleAnimationFrameRef.current = requestAnimationFrame(animateVehicle);
       } else {
         vehicleAnimationFrameRef.current = null;
-        vehiclePositionRef.current = nextPosition;
       }
     };
 
     vehicleAnimationFrameRef.current = requestAnimationFrame(animateVehicle);
+
+    return () => {
+      if (vehicleAnimationFrameRef.current !== null) {
+        cancelAnimationFrame(vehicleAnimationFrameRef.current);
+        vehicleAnimationFrameRef.current = null;
+      }
+    };
   }, [isKakaoMapReady, vehicleLocation]);
 
   if (shouldUseFallbackMap || !isKakaoMapReady) {
