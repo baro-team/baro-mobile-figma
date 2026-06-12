@@ -389,11 +389,21 @@ export function MapStage(props: MapStageProps) {
     }
 
     if (markerLatLngs.length > 0 || routeLatLngs.length > 1) {
+      const containerHeight = mapContainerRef.current.clientHeight || window.innerHeight;
+      const maxBottomPadding = Math.max(
+        MIN_MAP_BOUNDS_PADDING,
+        Math.floor(containerHeight * 0.5),
+      );
+      const bottomPadding = Math.min(
+        maxBottomPadding,
+        Math.max(MIN_MAP_BOUNDS_PADDING, Math.ceil(mapViewportBottomInset + MAP_BOUNDS_GAP)),
+      );
+
       map.setBounds(
         bounds,
         MIN_MAP_BOUNDS_PADDING,
         MIN_MAP_BOUNDS_PADDING,
-        Math.max(MIN_MAP_BOUNDS_PADDING, Math.ceil(mapViewportBottomInset + MAP_BOUNDS_GAP)),
+        bottomPadding,
         MIN_MAP_BOUNDS_PADDING,
       );
     }

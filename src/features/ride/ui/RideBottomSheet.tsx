@@ -240,15 +240,23 @@ export function RideBottomSheet({
     isDispatchLoading,
     dispatchError,
     dispatchResult,
+    destinationSearchError,
+    destinationSearchResults,
+    isDestinationSearchLoading,
     rideState,
+    originSearchError,
+    originSearchResults,
+    isOriginSearchLoading,
     searchRadius,
     selectedDestination,
     selectedOrigin,
   ]);
 
   useEffect(() => {
-    onHeightChange?.(sheetHeight || expandedHeight || COLLAPSED_HEIGHT);
-  }, [expandedHeight, onHeightChange, sheetHeight]);
+    if (sheetHeight > 0) {
+      onHeightChange?.(sheetHeight);
+    }
+  }, [onHeightChange, sheetHeight]);
 
   useEffect(() => {
     if (!isKeyboardOpen) {
