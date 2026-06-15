@@ -34,6 +34,10 @@ function getInitialVehicleLocation(
   };
 }
 
+function isActiveRideState(rideState: RideState) {
+  return rideState === "pending" || rideState === "matched" || rideState === "riding";
+}
+
 export function useRideFlow(accessToken: string) {
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
@@ -295,6 +299,10 @@ export function useRideFlow(accessToken: string) {
   }, [accessToken, clearAllTimers, clearVehicleStream, dispatchResult, rideState]);
 
   useEffect(() => {
+    if (isActiveRideState(rideState)) {
+      return;
+    }
+
     if (selectedOrigin && selectedDestination) {
       return;
     }
@@ -304,7 +312,7 @@ export function useRideFlow(accessToken: string) {
     setIsPreDispatchLoading(false);
     setDispatchResult(null);
     setDispatchError(null);
-  }, [selectedDestination, selectedOrigin]);
+  }, [rideState, selectedDestination, selectedOrigin]);
 
   useEffect(() => {
     const trimmedOrigin = origin.trim();
