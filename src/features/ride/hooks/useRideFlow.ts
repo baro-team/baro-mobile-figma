@@ -229,6 +229,11 @@ export function useRideFlow(accessToken: string) {
   }, [clearAllTimers, clearVehicleStream]);
 
   const cancelRide = useCallback(async () => {
+    if ((rideState === "matched" || rideState === "riding") && !dispatchResult) {
+      setDispatchError("배차 취소에 필요한 배차 정보를 확인할 수 없습니다.");
+      return;
+    }
+
     if (dispatchResult) {
       try {
         setIsCancelDispatchLoading(true);
@@ -263,7 +268,7 @@ export function useRideFlow(accessToken: string) {
     setSearchRadius(5);
     setShowCarOverlay(false);
     setVehicleLocation(null);
-  }, [accessToken, clearAllTimers, clearVehicleStream, dispatchResult]);
+  }, [accessToken, clearAllTimers, clearVehicleStream, dispatchResult, rideState]);
 
   useEffect(() => {
     if (selectedOrigin && selectedDestination) {
