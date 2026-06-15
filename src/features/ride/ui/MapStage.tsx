@@ -25,13 +25,11 @@ const MAP_PADDING = 0.16;
 const MIN_MAP_BOUNDS_PADDING = 40;
 const MAP_BOUNDS_GAP = 32;
 const ROUTE_DRAW_DURATION_MS = 1400;
-const VEHICLE_MARKER_MOVE_DURATION_MS = 650;
 
 type KakaoMapInstance = unknown;
-type KakaoLatLngInstance = unknown;
-type KakaoOverlayInstance = {
-  setMap: (map: unknown | null) => void;
-  setPosition?: (latLng: unknown) => void;
+type KakaoMapWithPan = {
+  panTo?: (latLng: unknown) => void;
+  setCenter?: (latLng: unknown) => void;
 };
 
 function easeOutCubic(progress: number) {
@@ -125,11 +123,6 @@ function FallbackMapStage({
   const routePolylinePoints = projectedRoutePoints
     .map((point) => `${point.x},${point.y}`)
     .join(" ");
-  const vehicleMarkerPosition =
-    vehicleLocation && projectedRoutePoints.length > 0
-      ? projectedRoutePoints[Math.floor(projectedRoutePoints.length / 2)]
-      : null;
-
   return (
     <div className="relative h-full w-full overflow-hidden bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100">
       <div className="absolute inset-0 opacity-10">
@@ -194,13 +187,13 @@ function FallbackMapStage({
         </svg>
       ) : null}
 
-      {(rideState === "matched" || rideState === "riding") && (
-        <div className="absolute top-[35%] left-[45%] animate-pulse">
+      {(rideState === "matched" || rideState === "riding") && vehicleLocation ? (
+        <div className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 animate-pulse">
           <div className="ds-icon-badge p-2">
             <Navigation className="w-5 h-5 text-white" />
           </div>
         </div>
-      )}
+      ) : null}
 
       {distanceKm !== null ? (
         <div className="ds-inline-card absolute left-4 px-4 py-2 backdrop-blur-md rounded-xl bottom-[calc(1rem+var(--safe-area-bottom))]">
@@ -208,10 +201,6 @@ function FallbackMapStage({
             {distanceKm.toFixed(1)}km
           </p>
         </div>
-      ) : null}
-
-      {vehicleMarkerPosition ? (
-        <FallbackMarker position={vehicleMarkerPosition} label="차량" variant="destination" />
       ) : null}
     </div>
   );
@@ -270,9 +259,6 @@ export function MapStage(props: MapStageProps) {
   } = props;
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<KakaoMapInstance | null>(null);
-  const vehicleOverlayRef = useRef<KakaoOverlayInstance | null>(null);
-  const vehiclePositionRef = useRef<{ lat: number; lon: number } | null>(null);
-  const vehicleAnimationFrameRef = useRef<number | null>(null);
   const [isKakaoMapReady, setIsKakaoMapReady] = useState(false);
   const [shouldUseFallbackMap, setShouldUseFallbackMap] = useState(false);
 
@@ -434,13 +420,6 @@ export function MapStage(props: MapStageProps) {
 
     return () => {
       mapRef.current = null;
-      vehiclePositionRef.current = null;
-      if (vehicleAnimationFrameRef.current !== null) {
-        cancelAnimationFrame(vehicleAnimationFrameRef.current);
-        vehicleAnimationFrameRef.current = null;
-      }
-      vehicleOverlayRef.current?.setMap(null);
-      vehicleOverlayRef.current = null;
 
       if (routeAnimationFrameId !== null) {
         cancelAnimationFrame(routeAnimationFrameId);
@@ -465,71 +444,17 @@ export function MapStage(props: MapStageProps) {
     const { kakao } = window;
 
     if (!vehicleLocation) {
-      vehicleOverlayRef.current?.setMap(null);
-      vehicleOverlayRef.current = null;
-      vehiclePositionRef.current = null;
       return;
     }
 
-    const nextPosition = { lat: vehicleLocation.lat, lon: vehicleLocation.lon };
-    const setOverlayPosition = (position: KakaoLatLngInstance) => {
-      if (!vehicleOverlayRef.current) {
-        vehicleOverlayRef.current = new kakao.maps.CustomOverlay({
-          map: mapRef.current,
-          position,
-          content: createMarkerContent("차량", "destination"),
-          yAnchor: 1.1,
-        });
-        return;
-      }
+    const nextLatLng = new kakao.maps.LatLng(vehicleLocation.lat, vehicleLocation.lon);
+    const map = mapRef.current as KakaoMapWithPan;
 
-      vehicleOverlayRef.current.setPosition?.(position);
-    };
-
-    if (vehicleAnimationFrameRef.current !== null) {
-      cancelAnimationFrame(vehicleAnimationFrameRef.current);
-      vehicleAnimationFrameRef.current = null;
+    if (map.panTo) {
+      map.panTo(nextLatLng);
+    } else {
+      map.setCenter?.(nextLatLng);
     }
-
-    const previousPosition = vehiclePositionRef.current;
-    if (!previousPosition) {
-      setOverlayPosition(new kakao.maps.LatLng(nextPosition.lat, nextPosition.lon));
-      vehiclePositionRef.current = nextPosition;
-      return;
-    }
-
-    let animationStartedAt: number | null = null;
-    const animateVehicle = (frameTime: number) => {
-      if (animationStartedAt === null) {
-        animationStartedAt = frameTime;
-      }
-
-      const progress = Math.min(
-        (frameTime - animationStartedAt) / VEHICLE_MARKER_MOVE_DURATION_MS,
-        1,
-      );
-      const easedProgress = easeOutCubic(progress);
-      const lat = previousPosition.lat + (nextPosition.lat - previousPosition.lat) * easedProgress;
-      const lon = previousPosition.lon + (nextPosition.lon - previousPosition.lon) * easedProgress;
-
-      setOverlayPosition(new kakao.maps.LatLng(lat, lon));
-      vehiclePositionRef.current = { lat, lon };
-
-      if (progress < 1) {
-        vehicleAnimationFrameRef.current = requestAnimationFrame(animateVehicle);
-      } else {
-        vehicleAnimationFrameRef.current = null;
-      }
-    };
-
-    vehicleAnimationFrameRef.current = requestAnimationFrame(animateVehicle);
-
-    return () => {
-      if (vehicleAnimationFrameRef.current !== null) {
-        cancelAnimationFrame(vehicleAnimationFrameRef.current);
-        vehicleAnimationFrameRef.current = null;
-      }
-    };
   }, [isKakaoMapReady, vehicleLocation]);
 
   if (shouldUseFallbackMap || !isKakaoMapReady) {
@@ -540,13 +465,13 @@ export function MapStage(props: MapStageProps) {
     <div className="relative h-full w-full overflow-hidden bg-[#eef3f8]">
       <div ref={mapContainerRef} className="absolute inset-0" />
 
-      {(rideState === "matched" || rideState === "riding") && (
-        <div className="absolute top-[35%] left-[45%] z-10 animate-pulse">
+      {(rideState === "matched" || rideState === "riding") && vehicleLocation ? (
+        <div className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 animate-pulse">
           <div className="ds-icon-badge p-2">
             <Navigation className="w-5 h-5 text-white" />
           </div>
         </div>
-      )}
+      ) : null}
 
       {distanceKm !== null ? (
         <div className="ds-inline-card absolute left-4 z-10 px-4 py-2 backdrop-blur-md rounded-xl bottom-[calc(1rem+var(--safe-area-bottom))]">
