@@ -54,9 +54,6 @@ export function MatchedPanel({
         <RideVehicleCard
           label={getVehicleLabel(dispatchResult)}
           badgeLabel={dispatchResult?.dispatchStatus}
-          metaItems={[
-            dispatchResult ? `차량번호 ${dispatchResult.carNumber ?? "확인 중"}` : null,
-          ]}
           rounded="2xl"
         />
         <div className="relative mt-4">

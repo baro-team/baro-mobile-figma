@@ -33,7 +33,6 @@ export function RidingPanel({
           label={getVehicleLabel(dispatchResult)}
           badgeLabel={dispatchResult?.dispatchStatus || "운행중"}
           metaItems={[
-            dispatchResult ? `차량번호 ${dispatchResult.carNumber ?? "확인 중"}` : null,
             dispatchResult ? `예상 주행 ${dispatchResult.estimatedRideTime}분` : null,
           ]}
           rounded="md"
