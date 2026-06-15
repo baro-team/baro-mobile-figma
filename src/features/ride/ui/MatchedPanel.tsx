@@ -12,6 +12,8 @@ type MatchedPanelProps = {
   arrivalTime: string;
   formattedEstimatedCost: string;
   dispatchResult: DispatchResult | null;
+  isCancelDispatchLoading: boolean;
+  cancelError: string | null;
   onCancelRide: () => void;
 };
 
@@ -29,6 +31,8 @@ export function MatchedPanel({
   arrivalTime,
   formattedEstimatedCost,
   dispatchResult,
+  isCancelDispatchLoading,
+  cancelError,
   onCancelRide,
 }: MatchedPanelProps) {
   return (
@@ -43,9 +47,10 @@ export function MatchedPanel({
         <RideSheetActions>
           <button
             onClick={onCancelRide}
-            className="type-title ds-button-secondary flex-1"
+            disabled={isCancelDispatchLoading}
+            className="type-title ds-button-secondary flex-1 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            배차 취소
+            {isCancelDispatchLoading ? "취소 중..." : "배차 취소"}
           </button>
         </RideSheetActions>
       }
@@ -63,6 +68,9 @@ export function MatchedPanel({
           />
           <RideFareSummary formattedEstimatedCost={formattedEstimatedCost} />
         </div>
+        {cancelError ? (
+          <p className="type-caption mt-3 text-red-500">{cancelError}</p>
+        ) : null}
       </RideSheetSection>
     </RideSheetPanel>
   );

@@ -10,6 +10,8 @@ type PendingPanelProps = {
   destination: string;
   searchRadius: number;
   dispatchResult: DispatchResult | null;
+  isCancelDispatchLoading: boolean;
+  cancelError: string | null;
   onCancelRide: () => void;
 };
 
@@ -18,6 +20,8 @@ export function PendingPanel({
   destination,
   searchRadius,
   dispatchResult,
+  isCancelDispatchLoading,
+  cancelError,
   onCancelRide,
 }: PendingPanelProps) {
   return (
@@ -26,9 +30,10 @@ export function PendingPanel({
         <RideSheetActions>
           <button
             onClick={onCancelRide}
-            className="type-title ds-button-secondary w-full"
+            disabled={isCancelDispatchLoading}
+            className="type-title ds-button-secondary w-full disabled:cursor-not-allowed disabled:opacity-60"
           >
-            취소
+            {isCancelDispatchLoading ? "취소 중..." : "취소"}
           </button>
         </RideSheetActions>
       }
@@ -71,6 +76,9 @@ export function PendingPanel({
               ></div>
             </div>
           </div>
+          {cancelError ? (
+            <p className="type-caption text-red-500">{cancelError}</p>
+          ) : null}
         </div>
       </RideSheetSection>
     </RideSheetPanel>

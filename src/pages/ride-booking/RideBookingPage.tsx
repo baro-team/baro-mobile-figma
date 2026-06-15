@@ -48,6 +48,7 @@ export function RideBookingPage({ session, onLogout }: RideBookingPageProps) {
     resetToBooking,
     cancelRide,
     isDispatchLoading,
+    isCancelDispatchLoading,
     dispatchError,
   } = useRideFlow(session.accessToken);
   const shouldUseDropoffRoute = rideState === "riding" || rideState === "completed";
@@ -112,6 +113,7 @@ export function RideBookingPage({ session, onLogout }: RideBookingPageProps) {
           isPreDispatchLoading={isPreDispatchLoading}
           preDispatchError={preDispatchError}
           isDispatchLoading={isDispatchLoading}
+          isCancelDispatchLoading={isCancelDispatchLoading}
           dispatchError={dispatchError}
           eta={eta}
           searchRadius={searchRadius}

@@ -4,6 +4,7 @@ import {
   DispatchResponse,
   DispatchResponseData,
   DispatchResult,
+  CancelDispatchResponse,
 } from "../model/pre-dispatch-types";
 import { ErrorResponse, getErrorMessage } from "./api-error";
 
@@ -101,4 +102,31 @@ export async function requestDispatch(
   }
 
   return unwrapDispatchResponse(data as DispatchResponse);
+}
+
+export async function cancelDispatch(
+  dispatchId: number,
+  accessToken: string,
+): Promise<void> {
+  const response = await fetch(`/api/dispatch/${dispatchId}/cancel`, {
+    method: "POST",
+    headers: {
+      Accept: "*/*",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  let data: CancelDispatchResponse | ErrorResponse | null = null;
+
+  try {
+    data = (await response.json()) as CancelDispatchResponse;
+  } catch {
+    data = null;
+  }
+
+  if (!response.ok) {
+    const errorMessage = getErrorMessage(data);
+
+    throw new Error(errorMessage || "배차 취소에 실패했습니다.");
+  }
 }
