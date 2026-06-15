@@ -272,9 +272,14 @@ export function MapStage(props: MapStageProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<KakaoMapInstance | null>(null);
   const vehicleTrackingResumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mapViewportBottomInsetRef = useRef(mapViewportBottomInset);
   const [isKakaoMapReady, setIsKakaoMapReady] = useState(false);
   const [shouldUseFallbackMap, setShouldUseFallbackMap] = useState(false);
   const [isVehicleTrackingPaused, setIsVehicleTrackingPaused] = useState(false);
+
+  useEffect(() => {
+    mapViewportBottomInsetRef.current = mapViewportBottomInset;
+  }, [mapViewportBottomInset]);
 
   const pathSignature = useMemo(
     () => routePath?.map(([lon, lat]) => `${lon}:${lat}`).join("|") ?? "",
@@ -436,14 +441,15 @@ export function MapStage(props: MapStageProps) {
     }
 
     if (markerLatLngs.length > 0 || routeLatLngs.length > 1) {
-      const containerHeight = mapContainerRef.current.clientHeight || window.innerHeight;
+      const container = mapContainerRef.current;
+      const containerHeight = container.clientHeight || window.innerHeight;
       const maxBottomPadding = Math.max(
         MIN_MAP_BOUNDS_PADDING,
         Math.floor(containerHeight * 0.5),
       );
       const bottomPadding = Math.min(
         maxBottomPadding,
-        Math.max(MIN_MAP_BOUNDS_PADDING, Math.ceil(mapViewportBottomInset + MAP_BOUNDS_GAP)),
+        Math.max(MIN_MAP_BOUNDS_PADDING, Math.ceil(mapViewportBottomInsetRef.current + MAP_BOUNDS_GAP)),
       );
 
       map.setBounds(
@@ -480,8 +486,42 @@ export function MapStage(props: MapStageProps) {
     originLocation,
     pathSignature,
     routePath,
-    mapViewportBottomInset,
   ]);
+
+  useEffect(() => {
+    if (!mapRef.current || !window.kakao?.maps || !mapContainerRef.current) {
+      return;
+    }
+    const map = mapRef.current as {
+      relayout?: () => void;
+      setBounds?: (bounds: unknown, top: number, right: number, bottom: number, left: number) => void;
+    };
+    map.relayout?.();
+
+    const hasPoints = originLocation || destinationLocation || routePath;
+    if (!hasPoints || !map.setBounds) {
+      return;
+    }
+
+    const container = mapContainerRef.current;
+    const { kakao } = window;
+    const rafId = requestAnimationFrame(() => {
+      if (!mapRef.current) return;
+      const bounds = new kakao.maps.LatLngBounds();
+      routePath?.forEach(([lon, lat]) => bounds.extend(new kakao.maps.LatLng(lat, lon)));
+      if (originLocation) bounds.extend(new kakao.maps.LatLng(originLocation.lat, originLocation.lon));
+      if (destinationLocation) bounds.extend(new kakao.maps.LatLng(destinationLocation.lat, destinationLocation.lon));
+      const containerHeight = container.clientHeight || window.innerHeight;
+      const maxBottomPadding = Math.max(MIN_MAP_BOUNDS_PADDING, Math.floor(containerHeight * 0.5));
+      const bottomPadding = Math.min(
+        maxBottomPadding,
+        Math.max(MIN_MAP_BOUNDS_PADDING, Math.ceil(mapViewportBottomInsetRef.current + MAP_BOUNDS_GAP)),
+      );
+      map.setBounds?.(bounds, MIN_MAP_BOUNDS_PADDING, MIN_MAP_BOUNDS_PADDING, bottomPadding, MIN_MAP_BOUNDS_PADDING);
+    });
+
+    return () => cancelAnimationFrame(rafId);
+  }, [mapViewportBottomInset, originLocation, destinationLocation, routePath]);
 
   useEffect(() => {
     if (!isKakaoMapReady || !window.kakao?.maps || !mapRef.current) {
