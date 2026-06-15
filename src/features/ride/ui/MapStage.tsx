@@ -25,12 +25,24 @@ const MAP_PADDING = 0.16;
 const MIN_MAP_BOUNDS_PADDING = 40;
 const MAP_BOUNDS_GAP = 32;
 const ROUTE_DRAW_DURATION_MS = 1400;
+const VEHICLE_TRACKING_RESUME_DELAY_MS = 20_000;
 
 type KakaoMapInstance = unknown;
 type KakaoMapWithPan = {
   panTo?: (latLng: unknown) => void;
   setCenter?: (latLng: unknown) => void;
 };
+type KakaoMapEventTarget = unknown;
+
+function shouldShowVehicleLocationMarker(
+  rideState: RideState,
+  vehicleLocation: VehicleLocation | null,
+) {
+  return (
+    Boolean(vehicleLocation) &&
+    (rideState === "pending" || rideState === "matched" || rideState === "riding")
+  );
+}
 
 function easeOutCubic(progress: number) {
   return 1 - Math.pow(1 - progress, 3);
@@ -187,7 +199,7 @@ function FallbackMapStage({
         </svg>
       ) : null}
 
-      {(rideState === "matched" || rideState === "riding") && vehicleLocation ? (
+      {shouldShowVehicleLocationMarker(rideState, vehicleLocation) ? (
         <div className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 animate-pulse">
           <div className="ds-icon-badge p-2">
             <Navigation className="w-5 h-5 text-white" />
@@ -259,8 +271,10 @@ export function MapStage(props: MapStageProps) {
   } = props;
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<KakaoMapInstance | null>(null);
+  const vehicleTrackingResumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isKakaoMapReady, setIsKakaoMapReady] = useState(false);
   const [shouldUseFallbackMap, setShouldUseFallbackMap] = useState(false);
+  const [isVehicleTrackingPaused, setIsVehicleTrackingPaused] = useState(false);
 
   const pathSignature = useMemo(
     () => routePath?.map(([lon, lat]) => `${lon}:${lat}`).join("|") ?? "",
@@ -315,8 +329,31 @@ export function MapStage(props: MapStageProps) {
     mapRef.current = map;
 
     const overlays: Array<{ setMap: (map: unknown | null) => void }> = [];
+    const mapEventListeners: Array<{
+      target: KakaoMapEventTarget;
+      type: string;
+      handler: () => void;
+    }> = [];
     const bounds = new kakao.maps.LatLngBounds();
     let routeAnimationFrameId: number | null = null;
+
+    const pauseVehicleTracking = () => {
+      setIsVehicleTrackingPaused(true);
+
+      if (vehicleTrackingResumeTimerRef.current !== null) {
+        clearTimeout(vehicleTrackingResumeTimerRef.current);
+      }
+
+      vehicleTrackingResumeTimerRef.current = setTimeout(() => {
+        vehicleTrackingResumeTimerRef.current = null;
+        setIsVehicleTrackingPaused(false);
+      }, VEHICLE_TRACKING_RESUME_DELAY_MS);
+    };
+
+    ["dragstart", "zoom_start"].forEach((type) => {
+      kakao.maps.event.addListener(map, type, pauseVehicleTracking);
+      mapEventListeners.push({ target: map, type, handler: pauseVehicleTracking });
+    });
 
     routeLatLngs.forEach((latLng) => bounds.extend(latLng));
 
@@ -425,6 +462,16 @@ export function MapStage(props: MapStageProps) {
         cancelAnimationFrame(routeAnimationFrameId);
       }
 
+      if (vehicleTrackingResumeTimerRef.current !== null) {
+        clearTimeout(vehicleTrackingResumeTimerRef.current);
+        vehicleTrackingResumeTimerRef.current = null;
+      }
+      setIsVehicleTrackingPaused(false);
+
+      mapEventListeners.forEach(({ target, type, handler }) => {
+        kakao.maps.event.removeListener(target, type, handler);
+      });
+
       overlays.forEach((overlay) => overlay.setMap(null));
     };
   }, [
@@ -443,7 +490,7 @@ export function MapStage(props: MapStageProps) {
 
     const { kakao } = window;
 
-    if (!vehicleLocation) {
+    if (!vehicleLocation || isVehicleTrackingPaused) {
       return;
     }
 
@@ -455,7 +502,7 @@ export function MapStage(props: MapStageProps) {
     } else {
       map.setCenter?.(nextLatLng);
     }
-  }, [isKakaoMapReady, vehicleLocation]);
+  }, [isKakaoMapReady, isVehicleTrackingPaused, vehicleLocation]);
 
   if (shouldUseFallbackMap || !isKakaoMapReady) {
     return <FallbackMapStage {...props} />;
@@ -465,7 +512,7 @@ export function MapStage(props: MapStageProps) {
     <div className="relative h-full w-full overflow-hidden bg-[#eef3f8]">
       <div ref={mapContainerRef} className="absolute inset-0" />
 
-      {(rideState === "matched" || rideState === "riding") && vehicleLocation ? (
+      {shouldShowVehicleLocationMarker(rideState, vehicleLocation) ? (
         <div className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 animate-pulse">
           <div className="ds-icon-badge p-2">
             <Navigation className="w-5 h-5 text-white" />
