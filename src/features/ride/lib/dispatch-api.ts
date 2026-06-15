@@ -116,15 +116,15 @@ export async function cancelDispatch(
     },
   });
 
-  let data: CancelDispatchResponse | ErrorResponse | null = null;
-
-  try {
-    data = (await response.json()) as CancelDispatchResponse;
-  } catch {
-    data = null;
-  }
-
   if (!response.ok) {
+    let data: CancelDispatchResponse | ErrorResponse | null = null;
+
+    try {
+      data = (await response.json()) as CancelDispatchResponse;
+    } catch {
+      data = null;
+    }
+
     const errorMessage = getErrorMessage(data);
 
     throw new Error(errorMessage || "배차 취소에 실패했습니다.");

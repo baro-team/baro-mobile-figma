@@ -35,6 +35,12 @@
 - 서버리스 함수에만 필요한 값은 `VITE_` 접두사를 붙이지 않는다.
 - 브라우저 번들에 노출되어야 하는 값만 `VITE_` 접두사를 사용한다.
 
+## TypeScript 안정성 규칙
+
+- non-null assertion(`!`)은 사용하지 않는다.
+- nullable 값은 optional chaining, nullish coalescing, 명시적 guard clause, `throw`/early return 등으로 안전하게 좁힌다.
+- API 응답, DOM ref, 외부 SDK 객체처럼 런타임에서 비어 있을 수 있는 값은 사용 직전에 명시적으로 검증한다.
+
 ## 테마 관리
 
 포인트 컬러만 바꾸면 한번에 바뀔 수 있도록 테마를 중앙 집중화한다. CSS 변수와 semantic utility를 사용하여 색상, 폰트, 간격, radius, shadow, 상태 스타일을 일관되게 관리한다.
