@@ -16,6 +16,24 @@ import {
 
 type TimerId = ReturnType<typeof setTimeout>;
 
+function getInitialVehicleLocation(
+  dispatchResult: DispatchResult,
+): VehicleLocation | null {
+  const [lon, lat] = dispatchResult.pickupRoutePath[0] ?? [];
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+    return null;
+  }
+
+  return {
+    lat,
+    lon,
+    carNumber: dispatchResult.carNumber,
+    phase: "to_pickup",
+    status: "moving_to_pickup",
+  };
+}
+
 export function useRideFlow(accessToken: string) {
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
@@ -100,7 +118,7 @@ export function useRideFlow(accessToken: string) {
       schedule(() => setSearchRadius(10), 1000);
       schedule(() => setSearchRadius(20), 3000);
       setRideState((current) => transitionRideState(current, "CAR_MATCHED"));
-      setVehicleLocation(null);
+      setVehicleLocation(getInitialVehicleLocation(nextDispatchResult));
       setShowCarOverlay(false);
 
       closeVehicleStreamRef.current = openVehicleLocationStream(
@@ -116,6 +134,12 @@ export function useRideFlow(accessToken: string) {
             }
 
             const status = location.status;
+
+            if (status === "moving_to_pickup") {
+              setRideState((current) =>
+                current === "pending" ? transitionRideState(current, "CAR_MATCHED") : current,
+              );
+            }
 
             if (status === "arrived_pickup") {
               setShowCarOverlay(true);
