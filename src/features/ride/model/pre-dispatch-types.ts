@@ -47,6 +47,19 @@ export type DispatchResponseData = {
   dispatch_status?: string;
 };
 
+export type CancelDispatchResponseData = {
+  dispatchId?: number;
+  dispatch_id?: number;
+  requestId?: number;
+  request_id?: number;
+  carId?: number;
+  car_id?: number;
+  carNumber?: string;
+  car_number?: string;
+  dispatchStatus?: string;
+  dispatch_status?: string;
+};
+
 export type BaseApiResponse<TData> = {
   success: boolean;
   data?: TData;
@@ -64,6 +77,10 @@ export type PreDispatchResponse =
 export type DispatchResponse =
   | DispatchResponseData
   | BaseApiResponse<DispatchResponseData>;
+
+export type CancelDispatchResponse =
+  | CancelDispatchResponseData
+  | BaseApiResponse<CancelDispatchResponseData>;
 
 export type PreDispatchPreview = {
   requestId: number;

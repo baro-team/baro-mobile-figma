@@ -25,6 +25,7 @@ type RideBottomSheetProps = {
   isPreDispatchLoading: boolean;
   preDispatchError: string | null;
   isDispatchLoading: boolean;
+  isCancelDispatchLoading: boolean;
   dispatchError: string | null;
   eta: number;
   searchRadius: number;
@@ -60,6 +61,7 @@ export function RideBottomSheet({
   isPreDispatchLoading,
   preDispatchError,
   isDispatchLoading,
+  isCancelDispatchLoading,
   dispatchError,
   eta,
   searchRadius,
@@ -190,6 +192,8 @@ export function RideBottomSheet({
             destination={destination}
             searchRadius={searchRadius}
             dispatchResult={dispatchResult}
+            isCancelDispatchLoading={isCancelDispatchLoading}
+            cancelError={dispatchError}
             onCancelRide={onCancelRide}
           />
         );
@@ -201,6 +205,8 @@ export function RideBottomSheet({
             arrivalTime={arrivalTime}
             formattedEstimatedCost={formattedEstimatedCost}
             dispatchResult={dispatchResult}
+            isCancelDispatchLoading={isCancelDispatchLoading}
+            cancelError={dispatchError}
             onCancelRide={onCancelRide}
           />
         );
@@ -238,6 +244,7 @@ export function RideBottomSheet({
     origin,
     preDispatchPreview,
     isDispatchLoading,
+    isCancelDispatchLoading,
     dispatchError,
     dispatchResult,
     destinationSearchError,

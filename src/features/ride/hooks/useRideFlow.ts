@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { requestDispatch } from "../lib/dispatch-api";
+import { cancelDispatch, requestDispatch } from "../lib/dispatch-api";
 import { openVehicleLocationStream } from "../lib/vehicle-location-stream";
 import { searchPlacesByKeyword } from "../lib/place-search-api";
 import { requestPreDispatch } from "../lib/pre-dispatch-api";
@@ -43,6 +43,7 @@ export function useRideFlow(accessToken: string) {
     null,
   );
   const [isDispatchLoading, setIsDispatchLoading] = useState(false);
+  const [isCancelDispatchLoading, setIsCancelDispatchLoading] = useState(false);
   const [dispatchError, setDispatchError] = useState<string | null>(null);
   const [estimatedCost, setEstimatedCost] = useState<number | null>(null);
   const [rideState, setRideState] = useState<RideState>("booking");
@@ -227,7 +228,22 @@ export function useRideFlow(accessToken: string) {
     setVehicleLocation(null);
   }, [clearAllTimers, clearVehicleStream]);
 
-  const cancelRide = useCallback(() => {
+  const cancelRide = useCallback(async () => {
+    if (dispatchResult) {
+      try {
+        setIsCancelDispatchLoading(true);
+        setDispatchError(null);
+        await cancelDispatch(dispatchResult.dispatchId, accessToken);
+      } catch (error) {
+        setDispatchError(
+          error instanceof Error ? error.message : "배차 취소에 실패했습니다.",
+        );
+        return;
+      } finally {
+        setIsCancelDispatchLoading(false);
+      }
+    }
+
     clearAllTimers();
     clearVehicleStream();
     setRideState((current) => transitionRideState(current, "RESET_TO_BOOKING"));
@@ -247,7 +263,7 @@ export function useRideFlow(accessToken: string) {
     setSearchRadius(5);
     setShowCarOverlay(false);
     setVehicleLocation(null);
-  }, [clearAllTimers, clearVehicleStream]);
+  }, [accessToken, clearAllTimers, clearVehicleStream, dispatchResult]);
 
   useEffect(() => {
     if (selectedOrigin && selectedDestination) {
@@ -354,6 +370,7 @@ export function useRideFlow(accessToken: string) {
     isPreDispatchLoading,
     preDispatchError,
     isDispatchLoading,
+    isCancelDispatchLoading,
     dispatchError,
     requestPreDispatchPreview,
     estimatedCost,
