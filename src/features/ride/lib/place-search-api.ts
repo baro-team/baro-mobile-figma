@@ -1,5 +1,7 @@
 import { PlaceSearchResult } from "../model/ride-location";
 
+const PLACE_SEARCH_RESULT_SIZE = 15;
+
 type KakaoKeywordSearchResult = {
   x: string;
   y: string;
@@ -37,7 +39,7 @@ export async function searchPlacesByKeyword(
   }
 
   const response = await fetch(
-    `/api/places/search?query=${encodeURIComponent(trimmedKeyword)}&size=5`,
+    `/api/places/search?query=${encodeURIComponent(trimmedKeyword)}&size=${PLACE_SEARCH_RESULT_SIZE}`,
     {
       method: "GET",
       headers: {
