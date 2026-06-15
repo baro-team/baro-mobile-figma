@@ -126,7 +126,7 @@ export function BookingPanel({
     }
 
     return (
-      <div className="ds-route-surface mt-2 overflow-hidden">
+      <div className="ds-route-surface mt-2 max-h-[15rem] overflow-y-auto overscroll-contain sm:max-h-[22.5rem]">
         {results.map((place) => (
           <button
             key={`${place.name}-${place.lat}-${place.lon}`}
