@@ -31,6 +31,10 @@ type KakaoMapSdk = {
       setMap: (map: unknown | null) => void;
       setPosition?: (latLng: KakaoLatLng) => void;
     };
+    event: {
+      addListener: (target: unknown, type: string, handler: () => void) => void;
+      removeListener: (target: unknown, type: string, handler: () => void) => void;
+    };
     services: {
       Places: new () => {
         keywordSearch: (
