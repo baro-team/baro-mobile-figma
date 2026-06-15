@@ -16,6 +16,28 @@ import {
 
 type TimerId = ReturnType<typeof setTimeout>;
 
+function getInitialVehicleLocation(
+  dispatchResult: DispatchResult,
+): VehicleLocation | null {
+  const [lon, lat] = dispatchResult.pickupRoutePath[0] ?? [];
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+    return null;
+  }
+
+  return {
+    lat,
+    lon,
+    carNumber: dispatchResult.carNumber,
+    phase: "to_pickup",
+    status: "moving_to_pickup",
+  };
+}
+
+function isActiveRideState(rideState: RideState) {
+  return rideState === "pending" || rideState === "matched" || rideState === "riding";
+}
+
 export function useRideFlow(accessToken: string) {
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
@@ -100,7 +122,7 @@ export function useRideFlow(accessToken: string) {
       schedule(() => setSearchRadius(10), 1000);
       schedule(() => setSearchRadius(20), 3000);
       setRideState((current) => transitionRideState(current, "CAR_MATCHED"));
-      setVehicleLocation(null);
+      setVehicleLocation(getInitialVehicleLocation(nextDispatchResult));
       setShowCarOverlay(false);
 
       closeVehicleStreamRef.current = openVehicleLocationStream(
@@ -116,6 +138,12 @@ export function useRideFlow(accessToken: string) {
             }
 
             const status = location.status;
+
+            if (status === "moving_to_pickup") {
+              setRideState((current) =>
+                current === "pending" ? transitionRideState(current, "CAR_MATCHED") : current,
+              );
+            }
 
             if (status === "arrived_pickup") {
               setShowCarOverlay(true);
@@ -229,6 +257,11 @@ export function useRideFlow(accessToken: string) {
   }, [clearAllTimers, clearVehicleStream]);
 
   const cancelRide = useCallback(async () => {
+    if ((rideState === "matched" || rideState === "riding") && !dispatchResult) {
+      setDispatchError("배차 취소에 필요한 배차 정보를 확인할 수 없습니다.");
+      return;
+    }
+
     if (dispatchResult) {
       try {
         setIsCancelDispatchLoading(true);
@@ -263,9 +296,13 @@ export function useRideFlow(accessToken: string) {
     setSearchRadius(5);
     setShowCarOverlay(false);
     setVehicleLocation(null);
-  }, [accessToken, clearAllTimers, clearVehicleStream, dispatchResult]);
+  }, [accessToken, clearAllTimers, clearVehicleStream, dispatchResult, rideState]);
 
   useEffect(() => {
+    if (isActiveRideState(rideState)) {
+      return;
+    }
+
     if (selectedOrigin && selectedDestination) {
       return;
     }
@@ -275,7 +312,7 @@ export function useRideFlow(accessToken: string) {
     setIsPreDispatchLoading(false);
     setDispatchResult(null);
     setDispatchError(null);
-  }, [selectedDestination, selectedOrigin]);
+  }, [rideState, selectedDestination, selectedOrigin]);
 
   useEffect(() => {
     const trimmedOrigin = origin.trim();
