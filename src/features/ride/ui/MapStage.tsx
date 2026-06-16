@@ -273,7 +273,6 @@ export function MapStage(props: MapStageProps) {
   const mapRef = useRef<KakaoMapInstance | null>(null);
   const vehicleTrackingResumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mapViewportBottomInsetRef = useRef(mapViewportBottomInset);
-  const isUserInteractingRef = useRef(false);
   const [isKakaoMapReady, setIsKakaoMapReady] = useState(false);
   const [shouldUseFallbackMap, setShouldUseFallbackMap] = useState(false);
   const [isVehicleTrackingPaused, setIsVehicleTrackingPaused] = useState(false);
@@ -344,7 +343,6 @@ export function MapStage(props: MapStageProps) {
     let routeAnimationFrameId: number | null = null;
 
     const pauseVehicleTracking = () => {
-      isUserInteractingRef.current = true;
       setIsVehicleTrackingPaused(true);
 
       if (vehicleTrackingResumeTimerRef.current !== null) {
@@ -357,18 +355,9 @@ export function MapStage(props: MapStageProps) {
       }, VEHICLE_TRACKING_RESUME_DELAY_MS);
     };
 
-    const resumeInteraction = () => {
-      isUserInteractingRef.current = false;
-    };
-
     ["dragstart", "zoom_start"].forEach((type) => {
       kakao.maps.event.addListener(map, type, pauseVehicleTracking);
       mapEventListeners.push({ target: map, type, handler: pauseVehicleTracking });
-    });
-
-    ["dragend", "zoom_changed"].forEach((type) => {
-      kakao.maps.event.addListener(map, type, resumeInteraction);
-      mapEventListeners.push({ target: map, type, handler: resumeInteraction });
     });
 
     routeLatLngs.forEach((latLng) => bounds.extend(latLng));
@@ -503,7 +492,7 @@ export function MapStage(props: MapStageProps) {
     if (!mapRef.current || !window.kakao?.maps || !mapContainerRef.current) {
       return;
     }
-    if (isUserInteractingRef.current) {
+    if (isVehicleTrackingPaused) {
       return;
     }
     const map = mapRef.current as {
@@ -520,7 +509,7 @@ export function MapStage(props: MapStageProps) {
     const container = mapContainerRef.current;
     const { kakao } = window;
     const rafId = requestAnimationFrame(() => {
-      if (!mapRef.current || isUserInteractingRef.current) return;
+      if (!mapRef.current || isVehicleTrackingPaused) return;
       const bounds = new kakao.maps.LatLngBounds();
       routePath?.forEach(([lon, lat]) => bounds.extend(new kakao.maps.LatLng(lat, lon)));
       if (originLocation) bounds.extend(new kakao.maps.LatLng(originLocation.lat, originLocation.lon));
@@ -535,7 +524,7 @@ export function MapStage(props: MapStageProps) {
     });
 
     return () => cancelAnimationFrame(rafId);
-  }, [mapViewportBottomInset, originLocation, destinationLocation, routePath]);
+  }, [mapViewportBottomInset, originLocation, destinationLocation, routePath, isVehicleTrackingPaused]);
 
   useEffect(() => {
     if (!isKakaoMapReady || !window.kakao?.maps || !mapRef.current) {
