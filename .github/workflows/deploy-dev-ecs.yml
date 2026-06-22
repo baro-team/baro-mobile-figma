@@ -1,4 +1,4 @@
-name: Deploy Dev ECS
+name: Deploy Dev ECS Blue Green
 
 on:
   workflow_dispatch:
@@ -13,8 +13,11 @@ env:
   AWS_REGION: ap-northeast-2
   ECS_CLUSTER: baro-dev
   ECS_SERVICE: baro-dev-baro-mobile
-  ECS_CONTAINER_NAME: baro-dev-baro-mobile
+  ECS_CONTAINER_NAME: baro-mobile
+  ECS_CONTAINER_PORT: 80
   ECR_REPOSITORY: baro-dev-baro-mobile
+  CODEDEPLOY_APPLICATION: baro-dev-baro-mobile
+  CODEDEPLOY_DEPLOYMENT_GROUP: baro-dev-baro-mobile
 
 jobs:
   deploy:
@@ -47,7 +50,7 @@ jobs:
           docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
           docker push "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
 
-      - name: Register task definition and deploy
+      - name: Register task definition and create blue-green deployment
         env:
           ECR_REGISTRY: ${{ steps.ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
@@ -56,7 +59,9 @@ jobs:
 
           TASK_DEF_JSON="$(mktemp)"
           NEW_TASK_DEF_JSON="$(mktemp)"
-          trap 'rm -f "$TASK_DEF_JSON" "$NEW_TASK_DEF_JSON"' EXIT
+          APPSPEC_YAML="$(mktemp)"
+          DEPLOYMENT_JSON="$(mktemp)"
+          trap 'rm -f "$TASK_DEF_JSON" "$NEW_TASK_DEF_JSON" "$APPSPEC_YAML" "$DEPLOYMENT_JSON"' EXIT
 
           IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
           TASK_DEF_ARN="$(aws ecs describe-services \
@@ -144,14 +149,42 @@ jobs:
             --query 'taskDefinition.taskDefinitionArn' \
             --output text)"
 
-          aws ecs update-service \
-            --cluster "$ECS_CLUSTER" \
-            --service "$ECS_SERVICE" \
-            --task-definition "$NEW_TASK_DEF_ARN" \
-            --force-new-deployment >/dev/null
+          cat > "$APPSPEC_YAML" <<EOF
+          version: 0.0
+          Resources:
+            - TargetService:
+                Type: AWS::ECS::Service
+                Properties:
+                  TaskDefinition: $NEW_TASK_DEF_ARN
+                  LoadBalancerInfo:
+                    ContainerName: $CONTAINER_NAME
+                    ContainerPort: $ECS_CONTAINER_PORT
+          EOF
 
-          aws ecs wait services-stable \
-            --cluster "$ECS_CLUSTER" \
-            --services "$ECS_SERVICE"
+          jq -n \
+            --arg applicationName "$CODEDEPLOY_APPLICATION" \
+            --arg deploymentGroupName "$CODEDEPLOY_DEPLOYMENT_GROUP" \
+            --arg description "GitHub Actions blue-green deploy $GITHUB_SHA" \
+            --rawfile content "$APPSPEC_YAML" \
+            '{
+              applicationName: $applicationName,
+              deploymentGroupName: $deploymentGroupName,
+              description: $description,
+              revision: {
+                revisionType: "AppSpecContent",
+                appSpecContent: {
+                  content: $content
+                }
+              }
+            }' > "$DEPLOYMENT_JSON"
 
+          DEPLOYMENT_ID="$(aws deploy create-deployment \
+            --cli-input-json "file://$DEPLOYMENT_JSON" \
+            --query 'deploymentId' \
+            --output text)"
+
+          aws deploy wait deployment-successful \
+            --deployment-id "$DEPLOYMENT_ID"
+
+          echo "Created CodeDeploy deployment: $DEPLOYMENT_ID"
           echo "Deployed task definition: $NEW_TASK_DEF_ARN"
