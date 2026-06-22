@@ -33,6 +33,10 @@ type KakaoMapWithPan = {
   setCenter?: (latLng: unknown) => void;
 };
 type KakaoMapEventTarget = unknown;
+type KakaoCustomOverlay = {
+  setMap: (map: unknown | null) => void;
+  setPosition?: (latLng: unknown) => void;
+};
 
 function shouldShowVehicleLocationMarker(
   rideState: RideState,
@@ -81,6 +85,51 @@ function getProjectedRoutePoints(routePath: RoutePoint[], bottomInsetRatio = 0) 
 
     return { x, y };
   });
+}
+
+function getProjectedRoutePoint(
+  routePath: RoutePoint[],
+  point: { lon: number; lat: number },
+  bottomInsetRatio = 0,
+) {
+  if (routePath.length === 0) {
+    return null;
+  }
+
+  const longitudes = routePath.map(([lon]) => lon);
+  const latitudes = routePath.map(([, lat]) => lat);
+  const minLon = Math.min(...longitudes);
+  const maxLon = Math.max(...longitudes);
+  const minLat = Math.min(...latitudes);
+  const maxLat = Math.max(...latitudes);
+  const lonRange = maxLon - minLon || 0.001;
+  const latRange = maxLat - minLat || 0.001;
+  const topPadding = MAP_PADDING;
+  const bottomPadding = Math.min(0.44, Math.max(MAP_PADDING, MAP_PADDING + bottomInsetRatio));
+  const availableHeight = Math.max(0.36, 1 - topPadding - bottomPadding);
+  const normalizedX = (point.lon - minLon) / lonRange;
+  const normalizedY = (maxLat - point.lat) / latRange;
+
+  return {
+    x: (MAP_PADDING + normalizedX * (1 - MAP_PADDING * 2)) * 100,
+    y: (topPadding + normalizedY * availableHeight) * 100,
+  };
+}
+
+function createVehicleMarkerContent() {
+  return `
+    <style>
+      @keyframes ds-vehicle-marker-pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.06); opacity: 0.86; }
+      }
+    </style>
+    <div style="display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:9999px;background:#22d3ee;color:white;box-shadow:0 10px 20px rgb(15 23 42 / 0.16);animation:ds-vehicle-marker-pulse 1.8s ease-in-out infinite;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <polygon points="3 11 22 2 13 21 11 13 3 11" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  `;
 }
 
 function createMarkerContent(label: string, variant: "origin" | "destination") {
@@ -132,6 +181,9 @@ function FallbackMapStage({
     destinationLocation || projectedRoutePoints.length > 0
       ? projectedRoutePoints[projectedRoutePoints.length - 1] ?? { x: 75, y: 70 }
       : null;
+  const vehicleMarkerPosition = vehicleLocation
+    ? getProjectedRoutePoint(routePath ?? [], vehicleLocation, bottomInsetRatio)
+    : null;
   const routePolylinePoints = projectedRoutePoints
     .map((point) => `${point.x},${point.y}`)
     .join(" ");
@@ -200,7 +252,13 @@ function FallbackMapStage({
       ) : null}
 
       {shouldShowVehicleLocationMarker(rideState, vehicleLocation) ? (
-        <div className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 animate-pulse">
+        <div
+          className="absolute z-10 -translate-x-1/2 -translate-y-1/2 animate-pulse"
+          style={{
+            left: `${vehicleMarkerPosition?.x ?? 50}%`,
+            top: `${vehicleMarkerPosition?.y ?? 50}%`,
+          }}
+        >
           <div className="ds-icon-badge p-2">
             <Navigation className="w-5 h-5 text-white" />
           </div>
@@ -271,6 +329,7 @@ export function MapStage(props: MapStageProps) {
   } = props;
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<KakaoMapInstance | null>(null);
+  const vehicleMarkerOverlayRef = useRef<KakaoCustomOverlay | null>(null);
   const vehicleTrackingResumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mapViewportBottomInsetRef = useRef(mapViewportBottomInset);
   const [isKakaoMapReady, setIsKakaoMapReady] = useState(false);
@@ -463,6 +522,8 @@ export function MapStage(props: MapStageProps) {
 
     return () => {
       mapRef.current = null;
+      vehicleMarkerOverlayRef.current?.setMap(null);
+      vehicleMarkerOverlayRef.current = null;
 
       if (routeAnimationFrameId !== null) {
         cancelAnimationFrame(routeAnimationFrameId);
@@ -533,19 +594,38 @@ export function MapStage(props: MapStageProps) {
 
     const { kakao } = window;
 
-    if (!vehicleLocation || isVehicleTrackingPaused) {
+    const map = mapRef.current as KakaoMapWithPan;
+
+    if (!vehicleLocation || !shouldShowVehicleLocationMarker(rideState, vehicleLocation)) {
+      vehicleMarkerOverlayRef.current?.setMap(null);
+      vehicleMarkerOverlayRef.current = null;
       return;
     }
 
     const nextLatLng = new kakao.maps.LatLng(vehicleLocation.lat, vehicleLocation.lon);
-    const map = mapRef.current as KakaoMapWithPan;
+
+    if (vehicleMarkerOverlayRef.current) {
+      vehicleMarkerOverlayRef.current.setPosition?.(nextLatLng);
+    } else {
+      vehicleMarkerOverlayRef.current = new kakao.maps.CustomOverlay({
+        map: mapRef.current,
+        position: nextLatLng,
+        content: createVehicleMarkerContent(),
+        xAnchor: 0.5,
+        yAnchor: 0.5,
+      });
+    }
+
+    if (isVehicleTrackingPaused) {
+      return;
+    }
 
     if (map.panTo) {
       map.panTo(nextLatLng);
     } else {
       map.setCenter?.(nextLatLng);
     }
-  }, [isKakaoMapReady, isVehicleTrackingPaused, vehicleLocation]);
+  }, [isKakaoMapReady, isVehicleTrackingPaused, rideState, vehicleLocation]);
 
   if (shouldUseFallbackMap || !isKakaoMapReady) {
     return <FallbackMapStage {...props} />;
